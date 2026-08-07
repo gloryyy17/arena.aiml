@@ -30,3 +30,7 @@ const authRoutes = require('./routes/authRoutes');
 
 // ... after existing middleware setup, before the health check route or after it
 app.use('/api/auth', authRoutes);
+
+const eventRoutes = require('./routes/eventRoutes');
+// ...
+app.use('/api/events', eventRoutes);
