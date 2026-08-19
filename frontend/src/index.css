@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-light: #FAF9F5;
+  --color-bg-dark: #121214;
+  --color-ink-light: #1A1A1C;
+  --color-ink-dark: #F2F0EA;
+  --color-accent: #5B47FB;
+  --color-sticker: #C4F135;
+  --color-border-light: #E7E4DC;
+  --color-border-dark: #2A2A2E;
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  @apply bg-bg-light text-ink-light dark:bg-bg-dark dark:text-ink-dark font-body transition-colors duration-300;
+}
+h1, h2, h3, h4 {
+  @apply font-display;
+}
