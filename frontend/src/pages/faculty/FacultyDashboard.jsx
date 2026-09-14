@@ -1,21 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   PlusCircle,
   Calendar,
-  MapPin,
   Palette,
   FileText,
   Mail,
   BarChart3,
   CheckCircle,
-  Clock,
   AlertCircle,
+  Edit3,
+  Trash2,
+  ExternalLink,
+  RefreshCw,
+  X,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import api from '../../api/axios';
+import api, { getErrorMessage } from '../../api/axios';
 
 const navItems = [
   { label: 'My Events', to: '/dashboard' },
@@ -26,30 +29,40 @@ const navItems = [
   { label: '⭐ Feedback Analysis', to: '/ai-hub/feedback' },
 ];
 
+const emptyEventForm = {
+  title: '',
+  category: 'Technical',
+  description: '',
+  venue: '',
+  startDate: '',
+  endDate: '',
+  registrationDeadline: '',
+  maxParticipants: 100,
+  fee: 0,
+  tags: '',
+};
+
 const FacultyDashboard = () => {
   const [myEvents, setMyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({
-    title: '',
-    category: 'Technical',
-    description: '',
-    venue: '',
-    startDate: '',
-    endDate: '',
-    registrationDeadline: '',
-    maxParticipants: 100,
-    fee: 0,
-    tags: '',
-  });
+  const [newEvent, setNewEvent] = useState(emptyEventForm);
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchMyEvents();
-  }, []);
+  // Edit Event State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editEvent, setEditEvent] = useState(null);
+  const [updating, setUpdating] = useState(false);
+  const [editError, setEditError] = useState('');
 
-  const fetchMyEvents = async () => {
+  // Delete Event State
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ show: false, event: null });
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const loadEvents = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/events/my-events');
@@ -59,35 +72,138 @@ const FacultyDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadEvents();
+  }, [loadEvents]);
+
+
+  // Create Event Handler
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     setCreating(true);
+    setCreateError('');
     setMessage('');
     try {
       const payload = {
         ...newEvent,
         tags: newEvent.tags.split(',').map((t) => t.trim()).filter(Boolean),
       };
-      await api.post('/events', payload);
+      const res = await api.post('/events', payload);
       setMessage('Event draft created successfully! Submit it for admin approval whenever ready.');
       setShowCreateModal(false);
-      fetchMyEvents();
+      setNewEvent(emptyEventForm);
+      if (res.data.event) {
+        setMyEvents((prev) => [res.data.event, ...prev]);
+      } else {
+        loadEvents();
+      }
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Failed to create event.');
+      setCreateError(getErrorMessage(err, 'Failed to create event.'));
     } finally {
       setCreating(false);
     }
   };
 
+  // Open Edit Modal
+  const handleEditClick = (ev) => {
+    const formatDate = (d) => (d ? new Date(d).toISOString().split('T')[0] : '');
+    setEditEvent({
+      ...ev,
+      startDate: formatDate(ev.startDate),
+      endDate: formatDate(ev.endDate),
+      registrationDeadline: formatDate(ev.registrationDeadline),
+      tags: Array.isArray(ev.tags) ? ev.tags.join(', ') : (ev.tags || ''),
+    });
+    setEditError('');
+    setShowEditModal(true);
+  };
+
+  // Submit Update (PUT /api/events/:id)
+  const handleUpdateEvent = async (e) => {
+    e.preventDefault();
+    if (!editEvent?._id) return;
+
+    setUpdating(true);
+    setEditError('');
+    setMessage('');
+
+    try {
+      const payload = {
+        title: editEvent.title,
+        category: editEvent.category,
+        description: editEvent.description,
+        venue: editEvent.venue,
+        startDate: editEvent.startDate,
+        endDate: editEvent.endDate,
+        registrationDeadline: editEvent.registrationDeadline,
+        maxParticipants: Number(editEvent.maxParticipants),
+        fee: Number(editEvent.fee),
+        tags: typeof editEvent.tags === 'string'
+          ? editEvent.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : editEvent.tags,
+      };
+
+      const res = await api.put(`/events/${editEvent._id}`, payload);
+      // Update local state without full reload
+      setMyEvents((prev) =>
+        prev.map((item) => (item._id === editEvent._id ? res.data.event : item))
+      );
+      setMessage(
+        editEvent.status === 'approved'
+          ? 'Event updated! Because it was previously approved, it has been resubmitted for admin review.'
+          : 'Event updated successfully!'
+      );
+      setShowEditModal(false);
+      setEditEvent(null);
+    } catch (err) {
+      setEditError(getErrorMessage(err, 'Failed to update event.'));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Open Delete Confirmation Modal
+  const handleDeleteClick = (ev) => {
+    setConfirmDeleteModal({ show: true, event: ev });
+    setDeleteError('');
+  };
+
+  // Confirm Delete (DELETE /api/events/:id)
+  const handleConfirmDelete = async () => {
+    const ev = confirmDeleteModal.event;
+    if (!ev?._id) return;
+
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await api.delete(`/events/${ev._id}`);
+      setMyEvents((prev) => prev.filter((item) => item._id !== ev._id));
+      setMessage(`Event "${ev.title}" deleted successfully.`);
+      setConfirmDeleteModal({ show: false, event: null });
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, 'Failed to delete event.'));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Submit For Approval (PATCH /api/events/:id/submit)
   const handleSubmitForApproval = async (id) => {
     try {
-      await api.patch(`/events/${id}/submit`);
+      const res = await api.patch(`/events/${id}/submit`);
       setMessage('Event submitted for admin approval!');
-      fetchMyEvents();
+      if (res.data.event) {
+        setMyEvents((prev) =>
+          prev.map((item) => (item._id === id ? res.data.event : item))
+        );
+      } else {
+        loadEvents();
+      }
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Failed to submit event.');
+      setMessage(getErrorMessage(err, 'Failed to submit event.'));
     }
   };
 
@@ -154,7 +270,10 @@ const FacultyDashboard = () => {
         </div>
 
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setCreateError('');
+            setShowCreateModal(true);
+          }}
           className="px-5 py-2.5 rounded-full bg-ink-light text-bg-light dark:bg-ink-dark dark:text-bg-dark font-medium text-xs hover:opacity-90 transition-all flex items-center gap-2 shadow-sm self-start sm:self-auto"
         >
           <PlusCircle size={16} /> Create Event
@@ -211,24 +330,64 @@ const FacultyDashboard = () => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-border-light dark:border-border-dark flex items-center justify-between">
-                <span className="font-mono text-xs font-bold">{ev.fee === 0 ? 'Free' : `₹${ev.fee}`}</span>
-                {ev.status === 'pending' && !ev.isPublished && (
-                  <button
-                    onClick={() => handleSubmitForApproval(ev._id)}
-                    className="text-xs font-mono px-3 py-1 rounded-full bg-accent text-white hover:opacity-90 transition-opacity"
-                  >
-                    Submit for Approval
-                  </button>
-                )}
-                {ev.status === 'approved' && (
-                  <Link
-                    to="/ai-hub/feedback"
-                    className="text-xs font-mono text-accent hover:underline"
-                  >
-                    View Feedback →
-                  </Link>
-                )}
+              {/* Actions Toolbar */}
+              <div className="pt-3 border-t border-border-light dark:border-border-dark space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold">{ev.fee === 0 ? 'Free' : `₹${ev.fee}`}</span>
+
+                  <div className="flex items-center gap-1.5">
+                    {/* View details */}
+                    <Link
+                      to={`/events/${ev._id}`}
+                      className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-accent transition-colors"
+                      title="View Event Details"
+                    >
+                      <ExternalLink size={14} />
+                    </Link>
+
+                    {/* Edit Event Button */}
+                    <button
+                      onClick={() => handleEditClick(ev)}
+                      className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-accent transition-colors"
+                      title="Edit Event"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+
+                    {/* Delete Event Button */}
+                    <button
+                      onClick={() => handleDeleteClick(ev)}
+                      className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-rose-500 hover:border-rose-500/40 transition-colors"
+                      title="Delete Event"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-mono">
+                  {ev.status === 'pending' && !ev.isPublished && (
+                    <button
+                      onClick={() => handleSubmitForApproval(ev._id)}
+                      className="text-xs font-mono px-3 py-1 rounded-full bg-accent text-white hover:opacity-90 transition-opacity"
+                    >
+                      Submit for Approval
+                    </button>
+                  )}
+                  {ev.status === 'approved' && (
+                    <Link
+                      to="/ai-hub/feedback"
+                      className="text-xs font-mono text-accent hover:underline"
+                    >
+                      View Feedback →
+                    </Link>
+                  )}
+                  {ev.status === 'rejected' && ev.rejectionReason && (
+                    <span className="text-[11px] text-rose-500 truncate" title={ev.rejectionReason}>
+                      Reason: {ev.rejectionReason}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -245,8 +404,19 @@ const FacultyDashboard = () => {
           >
             <div className="flex items-center justify-between border-b border-border-light dark:border-border-dark pb-3">
               <h3 className="font-display text-xl font-semibold">Create New Event</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-sm opacity-60 hover:opacity-100">✕</button>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-1 opacity-60 hover:opacity-100 transition-opacity"
+              >
+                <X size={18} />
+              </button>
             </div>
+
+            {createError && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
+                <AlertCircle size={15} /> {createError}
+              </div>
+            )}
 
             <form onSubmit={handleCreateEvent} className="space-y-4 text-xs">
               <div>
@@ -354,6 +524,16 @@ const FacultyDashboard = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Tags (Comma-separated)</label>
+                <input
+                  value={newEvent.tags}
+                  onChange={(e) => setNewEvent({ ...newEvent, tags: e.target.value })}
+                  placeholder="AI, Robotics, Hackathon"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                />
+              </div>
+
               <div className="flex items-center gap-3 pt-3">
                 <button
                   type="button"
@@ -365,8 +545,9 @@ const FacultyDashboard = () => {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 py-2.5 rounded-full bg-accent text-white font-mono text-xs font-semibold hover:opacity-90"
+                  className="flex-1 py-2.5 rounded-full bg-accent text-white font-mono text-xs font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
                 >
+                  {creating && <RefreshCw size={13} className="animate-spin" />}
                   {creating ? 'CREATING...' : 'CREATE DRAFT'}
                 </button>
               </div>
@@ -374,6 +555,224 @@ const FacultyDashboard = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Edit Event Modal (PUT /api/events/:id) */}
+      {showEditModal && editEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-xl bg-bg-light dark:bg-[#1A1A1E] border border-border-light dark:border-border-dark rounded-3xl p-6 md:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-border-light dark:border-border-dark pb-3">
+              <h3 className="font-display text-xl font-semibold">Edit Event</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1 opacity-60 hover:opacity-100 transition-opacity"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {editEvent.status === 'approved' && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs leading-relaxed">
+                ⚠️ Notice: Saving changes to this already-approved event will require administrative re-approval before it is published to students again.
+              </div>
+            )}
+
+            {editError && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
+                <AlertCircle size={15} /> {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateEvent} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Event Title *</label>
+                <input
+                  required
+                  value={editEvent.title || ''}
+                  onChange={(e) => setEditEvent({ ...editEvent, title: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Category</label>
+                  <select
+                    value={editEvent.category || 'Technical'}
+                    onChange={(e) => setEditEvent({ ...editEvent, category: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                  >
+                    <option value="Technical">Technical</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Seminar">Seminar</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Venue *</label>
+                  <input
+                    required
+                    value={editEvent.venue || ''}
+                    onChange={(e) => setEditEvent({ ...editEvent, venue: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Description *</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editEvent.description || ''}
+                  onChange={(e) => setEditEvent({ ...editEvent, description: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={editEvent.startDate || ''}
+                    onChange={(e) => setEditEvent({ ...editEvent, startDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={editEvent.endDate || ''}
+                    onChange={(e) => setEditEvent({ ...editEvent, endDate: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Deadline</label>
+                  <input
+                    type="date"
+                    required
+                    value={editEvent.registrationDeadline || ''}
+                    onChange={(e) => setEditEvent({ ...editEvent, registrationDeadline: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Max Participants</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={editEvent.maxParticipants || 100}
+                    onChange={(e) => setEditEvent({ ...editEvent, maxParticipants: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Registration Fee (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editEvent.fee ?? 0}
+                    onChange={(e) => setEditEvent({ ...editEvent, fee: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-mono uppercase tracking-wider opacity-60 mb-1">Tags (Comma-separated)</label>
+                <input
+                  value={editEvent.tags || ''}
+                  onChange={(e) => setEditEvent({ ...editEvent, tags: e.target.value })}
+                  placeholder="AI, Robotics, Hackathon"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-2.5 rounded-full border border-border-light dark:border-border-dark font-mono text-xs"
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="flex-1 py-2.5 rounded-full bg-accent text-white font-mono text-xs font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
+                >
+                  {updating && <RefreshCw size={13} className="animate-spin" />}
+                  {updating ? 'SAVING...' : 'SAVE CHANGES'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Event Confirmation Modal (DELETE /api/events/:id) */}
+      <AnimatePresence>
+        {confirmDeleteModal.show && confirmDeleteModal.event && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-bg-light dark:bg-[#1A1A1E] border border-border-light dark:border-border-dark rounded-3xl p-6 md:p-8 shadow-2xl space-y-4"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                <Trash2 size={24} />
+              </div>
+
+              <div>
+                <h3 className="font-display text-xl font-semibold mb-1">Delete Event</h3>
+                <p className="text-xs opacity-75 leading-relaxed">
+                  Are you sure you want to permanently delete{' '}
+                  <strong className="text-accent">{confirmDeleteModal.event.title}</strong>?
+                  This action cannot be undone and will remove the event from the system.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
+                  <AlertCircle size={14} /> {deleteError}
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => setConfirmDeleteModal({ show: false, event: null })}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-full border border-border-light dark:border-border-dark text-xs font-mono hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                >
+                  CANCEL
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-full bg-rose-500 text-white text-xs font-mono font-medium hover:bg-rose-600 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  {deleting && <RefreshCw size={13} className="animate-spin" />}
+                  {deleting ? 'DELETING...' : 'CONFIRM DELETE'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   );
 };
