@@ -3,7 +3,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const errorHandler = require('./middleware/errorHandler');
+const certificateRoutes = require('./routes/certificateRoutes');
+// ...
+app.use('/api/certificates', certificateRoutes);
 
+// Serve uploaded files (certificates) statically
+app.use('/uploads', express.static('uploads'));
 const app = express();
 
 // Core middleware
@@ -34,3 +39,6 @@ app.use('/api/auth', authRoutes);
 const eventRoutes = require('./routes/eventRoutes');
 // ...
 app.use('/api/events', eventRoutes);
+
+const registrationRoutes = require('./routes/registrationRoutes');
+app.use('/api/registrations', registrationRoutes);
