@@ -12,10 +12,14 @@ import {
   Share2,
   Check,
   Tag,
+  CreditCard,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import api, { getErrorMessage } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import { loadRazorpayScript } from '../utils/razorpay';
 
 const fallbackEvents = {
   'sample-ai-hackathon': {
@@ -99,6 +103,7 @@ const EventDetails = () => {
 
   const [isRegistered, setIsRegistered] = useState(false);
   const [userRegistrationId, setUserRegistrationId] = useState(null);
+  const [mockPaymentModal, setMockPaymentModal] = useState({ show: false, order: null, eventInfo: null });
 
   useEffect(() => {
     let isMounted = true;
@@ -160,6 +165,86 @@ const EventDetails = () => {
     setRegisterSuccess('');
 
     try {
+      // 1. If Paid Event, Initiate Razorpay Payment Flow
+      if (Number(event.fee || 0) > 0) {
+        const orderRes = await api.post('/payments/create-order', { eventId: id });
+        const { order, keyId, isMock } = orderRes.data;
+
+        // If backend operates in Mock/Simulation Mode (no live Razorpay keys set)
+        if (isMock) {
+          setMockPaymentModal({
+            show: true,
+            order,
+            eventInfo: {
+              title: event.title,
+              fee: event.fee,
+            },
+          });
+          setRegistering(false);
+          return;
+        }
+
+        // Live Razorpay Checkout Mode
+        const isScriptLoaded = await loadRazorpayScript();
+        if (!isScriptLoaded || !window.Razorpay) {
+          throw new Error('Razorpay SDK failed to load. Please check your network connection.');
+        }
+
+        const options = {
+          key: keyId,
+          amount: order.amount,
+          currency: order.currency || 'INR',
+          name: 'Arena.AIML',
+          description: `Registration for ${event.title}`,
+          order_id: order.orderId,
+          handler: async (response) => {
+            try {
+              setRegistering(true);
+              const verifyRes = await api.post('/payments/verify', {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                eventId: id,
+              });
+              setRegisterSuccess(verifyRes.data?.message || 'Payment verified and registration confirmed!');
+              setIsRegistered(true);
+              if (verifyRes.data?.registration?._id) {
+                setUserRegistrationId(verifyRes.data.registration._id);
+              }
+              const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+              if (updatedRes?.data?.event) {
+                setEvent(updatedRes.data.event);
+              }
+            } catch (vErr) {
+              setRegisterError(getErrorMessage(vErr, 'Payment verification failed.'));
+            } finally {
+              setRegistering(false);
+            }
+          },
+          prefill: {
+            name: user.name || '',
+            email: user.email || '',
+          },
+          theme: {
+            color: '#6366f1',
+          },
+          modal: {
+            ondismiss: () => {
+              setRegistering(false);
+            },
+          },
+        };
+
+        const razorpayInstance = new window.Razorpay(options);
+        razorpayInstance.on('payment.failed', (response) => {
+          setRegisterError(response.error?.description || 'Payment transaction failed or was cancelled.');
+          setRegistering(false);
+        });
+        razorpayInstance.open();
+        return;
+      }
+
+      // 2. Free Event Direct Registration Flow
       const res = await api.post(`/registrations/${id}`);
       setRegisterSuccess(res.data?.message || 'Successfully registered for this event!');
       setIsRegistered(true);
@@ -173,6 +258,38 @@ const EventDetails = () => {
       }
     } catch (err) {
       setRegisterError(getErrorMessage(err, 'Failed to register for event.'));
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleConfirmMockPayment = async () => {
+    if (!mockPaymentModal.order) return;
+    setRegistering(true);
+    setRegisterError('');
+    setRegisterSuccess('');
+
+    try {
+      const verifyRes = await api.post('/payments/verify', {
+        razorpayOrderId: mockPaymentModal.order.orderId,
+        razorpayPaymentId: `pay_mock_${Date.now()}`,
+        razorpaySignature: `sig_mock_${Date.now()}`,
+        eventId: id,
+      });
+
+      setRegisterSuccess(verifyRes.data?.message || 'Mock payment verified and registration confirmed!');
+      setIsRegistered(true);
+      if (verifyRes.data?.registration?._id) {
+        setUserRegistrationId(verifyRes.data.registration._id);
+      }
+      setMockPaymentModal({ show: false, order: null, eventInfo: null });
+
+      const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+      if (updatedRes?.data?.event) {
+        setEvent(updatedRes.data.event);
+      }
+    } catch (err) {
+      setRegisterError(getErrorMessage(err, 'Failed to complete simulated payment.'));
     } finally {
       setRegistering(false);
     }
@@ -412,14 +529,19 @@ const EventDetails = () => {
                         {registering ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Processing Registration...</span>
+                            <span>Processing...</span>
                           </>
                         ) : isDeadlinePassed ? (
                           'Registration Closed'
                         ) : event.status !== 'approved' ? (
                           'Event Not Open'
+                        ) : event.fee > 0 ? (
+                          <>
+                            <CreditCard size={15} />
+                            <span>Pay ₹{event.fee} & Register</span>
+                          </>
                         ) : (
-                          'Confirm Registration'
+                          'Confirm Free Registration'
                         )}
                       </button>
                     )
@@ -450,6 +572,79 @@ const EventDetails = () => {
                 </div>
               )}
             </div>
+
+            {/* Mock Payment Simulation Modal */}
+            {mockPaymentModal.show && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="w-full max-w-md bg-bg-light dark:bg-[#1C1C20] rounded-3xl border border-border-light dark:border-border-dark p-6 md:p-8 shadow-2xl space-y-5">
+                  <div className="flex items-center justify-between border-b border-border-light dark:border-border-dark pb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center">
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <h4 className="font-display font-semibold text-base">Razorpay Test Checkout</h4>
+                        <span className="text-[10px] font-mono text-accent uppercase font-bold tracking-wider">Simulation Mode</span>
+                      </div>
+                    </div>
+                    <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
+                      Sandbox
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border-light dark:border-border-dark text-xs font-mono">
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Event:</span>
+                      <span className="font-bold truncate max-w-[200px]">{event.title}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Order ID:</span>
+                      <span className="font-mono opacity-90 truncate max-w-[180px]">{mockPaymentModal.order?.orderId}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-border-light dark:border-border-dark">
+                      <span className="font-semibold text-sm">Amount Due:</span>
+                      <span className="font-display text-lg font-bold text-accent">₹{event.fee}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2.5 text-xs">
+                    <ShieldCheck size={16} className="text-indigo-500 mt-0.5 shrink-0" />
+                    <p className="opacity-80 text-[11px] leading-relaxed">
+                      This is a live simulation. Clicking confirm will issue a valid mock transaction signature, store the payment receipt, and activate your ticket.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setMockPaymentModal({ show: false, order: null, eventInfo: null })}
+                      disabled={registering}
+                      className="flex-1 py-2.5 rounded-full border border-border-light dark:border-border-dark text-xs font-mono hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmMockPayment}
+                      disabled={registering}
+                      className="flex-1 py-2.5 rounded-full bg-accent text-white text-xs font-mono font-medium hover:opacity-90 transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+                    >
+                      {registering ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={14} />
+                          <span>Simulate Success</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.article>
         ) : null}
       </main>

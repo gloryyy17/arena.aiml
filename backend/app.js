@@ -10,6 +10,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error handler (must be registered after all route handlers)
 app.use(errorHandler);

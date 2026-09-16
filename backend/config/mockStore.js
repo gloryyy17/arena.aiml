@@ -6,6 +6,7 @@ class MockStore {
     this.events = new Map();
     this.registrations = new Map();
     this.conversations = new Map();
+    this.payments = new Map();
     this._seed();
   }
 
@@ -339,6 +340,78 @@ class MockStore {
       .filter((c) => String(c.user) === String(userId))
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
       .slice(0, 15);
+  }
+
+  // --- Payments ---
+  createPaymentOrder(studentId, eventId, orderResult, amount) {
+    const paymentId = `mock-pay-${Date.now()}`;
+    const event = this.events.get(String(eventId));
+
+    // Also prepare/reserve registration in pending state
+    const regKey = `${studentId}_${eventId}`;
+    let reg = this.registrations.get(regKey);
+    if (!reg) {
+      const regId = `reg-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      reg = {
+        _id: regId,
+        student: studentId,
+        event: event,
+        registrationStatus: 'confirmed',
+        paymentStatus: 'pending',
+        payment: paymentId,
+        createdAt: new Date(),
+      };
+      this.registrations.set(regKey, reg);
+      this.registrations.set(regId, reg);
+    }
+
+    const payment = {
+      _id: paymentId,
+      student: studentId,
+      event: event,
+      registration: reg._id,
+      amount: amount,
+      currency: orderResult.currency || 'INR',
+      razorpayOrderId: orderResult.orderId,
+      razorpayPaymentId: null,
+      razorpaySignature: null,
+      status: 'created',
+      createdAt: new Date(),
+    };
+
+    this.payments.set(orderResult.orderId, payment);
+    this.payments.set(paymentId, payment);
+    return payment;
+  }
+
+  verifyPayment(studentId, eventId, { razorpayOrderId, razorpayPaymentId, razorpaySignature }) {
+    const payment = this.payments.get(String(razorpayOrderId));
+    if (!payment) {
+      return { error: 'Payment order not found', status: 404 };
+    }
+
+    payment.razorpayPaymentId = razorpayPaymentId;
+    payment.razorpaySignature = razorpaySignature;
+    payment.status = 'paid';
+    payment.updatedAt = new Date();
+
+    const regKey = `${studentId}_${eventId}`;
+    const reg = this.registrations.get(regKey) || this.registrations.get(String(payment.registration));
+    if (reg) {
+      reg.paymentStatus = 'paid';
+      reg.registrationStatus = 'confirmed';
+      reg.payment = payment._id;
+      reg.updatedAt = new Date();
+    }
+
+    return { payment, registration: reg };
+  }
+
+  getMyPayments(studentId) {
+    const list = Array.from(this.payments.values())
+      .filter((p) => p.status === 'paid' && String(p.student) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return list;
   }
 }
 

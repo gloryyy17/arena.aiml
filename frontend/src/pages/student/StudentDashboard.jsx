@@ -356,9 +356,21 @@ const StudentDashboard = () => {
                     </div>
 
                     <div className="pt-3 border-t border-border-light dark:border-border-dark flex items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-bold">
-                        {ev.fee === 0 ? 'Free' : `₹${ev.fee || 0}`}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold">
+                          {ev.fee === 0 ? 'Free' : `₹${ev.fee || 0}`}
+                        </span>
+                        {reg.paymentStatus === 'paid' && (
+                          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-bold uppercase">
+                            Paid
+                          </span>
+                        )}
+                        {reg.paymentStatus === 'pending' && (
+                          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold uppercase">
+                            Payment Pending
+                          </span>
+                        )}
+                      </div>
 
                       <div className="flex items-center gap-2">
                         {ev._id && (
