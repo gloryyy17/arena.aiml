@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Palette,
@@ -6,14 +6,10 @@ import {
   Download,
   Share2,
   RefreshCw,
-  Save,
   Check,
   AlertCircle,
   Clock,
-  Layers,
   Sliders,
-  Maximize2,
-  ExternalLink,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
@@ -63,21 +59,20 @@ const PosterGenerator = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const res = await api.get('/ai/poster/history');
       setHistory(res.data.history || []);
     } catch (err) {
       console.warn('Failed to load history', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -91,7 +86,6 @@ const PosterGenerator = () => {
 
     setError('');
     setLoading(true);
-    setSaved(false);
 
     try {
       const res = await api.post('/ai/poster/generate', form);

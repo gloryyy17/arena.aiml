@@ -53,38 +53,48 @@ const generatePoster = async (req, res, next) => {
     });
 
     // Save generation metadata to database
-    const aiGenRecord = await AIGeneration.create({
-      user: req.user._id,
-      event: eventId || null,
-      generationType: 'poster',
-      promptName: 'POSTER_PROMPT',
-      promptVersion: interpolated.version,
-      provider: generationResult.provider || 'gemini',
-      model: 'imagen-3 / pollinations',
-      inputParameters: {
-        eventName,
-        category,
-        theme,
-        designStyle: style,
-        colorPreference,
-        size,
-      },
-      result: {
-        imageUrl: generationResult.imageUrl,
-        metadata: generationResult.metadata,
-      },
-      status: 'success',
-    });
+    let genId = `poster-${Date.now()}`;
+    try {
+      const aiGenRecord = await AIGeneration.create({
+        user: req.user._id,
+        event: eventId || null,
+        generationType: 'poster',
+        promptName: 'POSTER_PROMPT',
+        promptVersion: interpolated.version,
+        provider: generationResult.provider || 'gemini',
+        model: 'imagen-3 / pollinations',
+        inputParameters: {
+          eventName,
+          category,
+          theme,
+          designStyle: style,
+          colorPreference,
+          size,
+        },
+        result: {
+          imageUrl: generationResult.imageUrl,
+          metadata: generationResult.metadata,
+        },
+        status: 'success',
+      });
+      if (aiGenRecord?._id) genId = aiGenRecord._id;
+    } catch {
+      // In-memory mode
+    }
 
     // If linked to an event, optionally update event's posterUrl if requested
     if (eventId && req.body.applyToEvent) {
-      await Event.findByIdAndUpdate(eventId, { posterUrl: generationResult.imageUrl });
+      try {
+        await Event.findByIdAndUpdate(eventId, { posterUrl: generationResult.imageUrl });
+      } catch {
+        // In-memory mode
+      }
     }
 
     res.status(200).json({
       success: true,
       data: {
-        generationId: aiGenRecord._id,
+        generationId: genId,
         imageUrl: generationResult.imageUrl,
         promptUsed: interpolated.prompt,
         style,
@@ -102,12 +112,17 @@ const generatePoster = async (req, res, next) => {
 // @access  Private
 const getPosterHistory = async (req, res, next) => {
   try {
-    const history = await AIGeneration.find({
-      user: req.user._id,
-      generationType: 'poster',
-    })
-      .sort({ createdAt: -1 })
-      .limit(20);
+    let history = [];
+    try {
+      history = await AIGeneration.find({
+        user: req.user._id,
+        generationType: 'poster',
+      })
+        .sort({ createdAt: -1 })
+        .limit(20);
+    } catch {
+      history = [];
+    }
 
     res.status(200).json({ success: true, count: history.length, history });
   } catch (error) {

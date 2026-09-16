@@ -22,6 +22,9 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/events" element={<Landing />} />
+        <Route path="/about" element={<Landing />} />
+        <Route path="/contact" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/events/:id" element={<EventDetails />} />

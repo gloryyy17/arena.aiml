@@ -16,25 +16,29 @@ const getRecommendations = async (req, res, next) => {
 
     // Optionally log recommendation generation
     if (recommendations.length > 0) {
-      await AIGeneration.create({
-        user: req.user._id,
-        generationType: 'recommendation',
-        promptName: 'RECOMMENDATION_ENGINE',
-        promptVersion: '1.0.0',
-        provider: 'content-based-weighted',
-        model: 'multi-signal-v1',
-        inputParameters: {
-          userInterests: req.user.interests,
-          department: req.user.department,
-          limit,
-        },
-        result: recommendations.map((r) => ({
-          eventId: r.event._id,
-          score: r.score,
-          reason: r.reason,
-        })),
-        status: 'success',
-      });
+      try {
+        await AIGeneration.create({
+          user: req.user._id,
+          generationType: 'recommendation',
+          promptName: 'RECOMMENDATION_ENGINE',
+          promptVersion: '1.0.0',
+          provider: 'content-based-weighted',
+          model: 'multi-signal-v1',
+          inputParameters: {
+            userInterests: req.user.interests,
+            department: req.user.department,
+            limit,
+          },
+          result: recommendations.map((r) => ({
+            eventId: r.event._id,
+            score: r.score,
+            reason: r.reason,
+          })),
+          status: 'success',
+        });
+      } catch {
+        // In-memory mode
+      }
     }
 
     res.status(200).json({

@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Cpu,
-  Sparkles,
   Code,
   Play,
   RefreshCw,
-  CheckCircle2,
-  FileCode,
   Layers,
   Sliders,
-  ShieldCheck,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
@@ -28,30 +23,9 @@ const PromptSystemView = () => {
   const [selectedPrompt, setSelectedPrompt] = useState(null);
   const [testVariables, setTestVariables] = useState({});
   const [testResult, setTestResult] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    fetchPrompts();
-  }, []);
-
-  const fetchPrompts = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/ai/prompts');
-      const list = res.data.prompts || [];
-      setPrompts(list);
-      if (list.length > 0) {
-        selectPrompt(list[0]);
-      }
-    } catch (err) {
-      console.warn('Failed to load prompts', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const selectPrompt = (prompt) => {
+  const selectPrompt = useCallback((prompt) => {
     setSelectedPrompt(prompt);
     setTestResult(null);
 
@@ -67,7 +41,24 @@ const PromptSystemView = () => {
     if (initialVars.userQuery) initialVars.userQuery = 'What technical workshops are happening this week?';
 
     setTestVariables(initialVars);
-  };
+  }, []);
+
+  const fetchPrompts = useCallback(async () => {
+    try {
+      const res = await api.get('/ai/prompts');
+      const list = res.data.prompts || [];
+      setPrompts(list);
+      if (list.length > 0) {
+        selectPrompt(list[0]);
+      }
+    } catch (err) {
+      console.warn('Failed to load prompts', err);
+    }
+  }, [selectPrompt]);
+
+  useEffect(() => {
+    fetchPrompts();
+  }, [fetchPrompts]);
 
   const handleTestRun = async () => {
     if (!selectedPrompt) return;

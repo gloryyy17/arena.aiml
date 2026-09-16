@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
@@ -19,4 +20,3 @@ export const getErrorMessage = (error, fallback = 'An unexpected error occurred'
 };
 
 export default api;
-

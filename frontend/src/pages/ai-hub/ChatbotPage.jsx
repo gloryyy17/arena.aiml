@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  MessageSquare,
   Bot,
   User as UserIcon,
   Sparkles,
@@ -9,7 +8,6 @@ import {
   Loader2,
   Calendar,
   MapPin,
-  Tag,
   ArrowRight,
   PlusCircle,
   Clock,
@@ -52,22 +50,22 @@ const ChatbotPage = () => {
   const [conversations, setConversations] = useState([]);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       const res = await api.get('/ai/chat/conversations');
       setConversations(res.data.conversations || []);
     } catch (err) {
       console.warn('Failed to load conversations', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const handleSend = async (queryText) => {
     const text = queryText || input;
@@ -98,7 +96,7 @@ const ChatbotPage = () => {
         },
       ]);
       fetchConversations();
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {

@@ -1,10 +1,20 @@
 const Event = require('../models/Event');
+const { isDbConnected } = require('../config/db');
+const mockStore = require('../config/mockStore');
 
 // @desc    Create new event (starts as draft)
 // @route   POST /api/events
 // @access  Private (Faculty)
 const createEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const event = mockStore.createEvent({
+        ...req.body,
+        createdBy: { _id: req.user._id, name: req.user.name, department: req.user.department },
+      });
+      return res.status(201).json({ success: true, event });
+    }
+
     const event = await Event.create({
       ...req.body,
       createdBy: req.user._id,
@@ -21,6 +31,11 @@ const createEvent = async (req, res, next) => {
 // @access  Public
 const getEvents = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const events = mockStore.getEvents(req.query);
+      return res.status(200).json({ success: true, count: events.length, events });
+    }
+
     const { category, department, search } = req.query;
 
     const filter = { status: 'approved', isPublished: true };
@@ -43,6 +58,14 @@ const getEvents = async (req, res, next) => {
 // @access  Public
 const getEventById = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const event = mockStore.getEventById(req.params.id);
+      if (!event) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      return res.status(200).json({ success: true, event });
+    }
+
     const event = await Event.findById(req.params.id).populate('createdBy', 'name department');
 
     if (!event) {
@@ -60,6 +83,11 @@ const getEventById = async (req, res, next) => {
 // @access  Private (Faculty)
 const getMyEvents = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const events = mockStore.getMyEvents(req.user._id);
+      return res.status(200).json({ success: true, count: events.length, events });
+    }
+
     const events = await Event.find({ createdBy: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: events.length, events });
   } catch (error) {
@@ -72,6 +100,11 @@ const getMyEvents = async (req, res, next) => {
 // @access  Private (Admin)
 const getAllEventsForAdmin = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const events = mockStore.getAllEvents();
+      return res.status(200).json({ success: true, count: events.length, events });
+    }
+
     const { status } = req.query;
     const filter = status ? { status } : {};
 
@@ -90,6 +123,14 @@ const getAllEventsForAdmin = async (req, res, next) => {
 // @access  Private (Faculty - own events only)
 const updateEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const updated = mockStore.updateEvent(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      return res.status(200).json({ success: true, event: updated });
+    }
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -122,6 +163,11 @@ const updateEvent = async (req, res, next) => {
 // @access  Private (Faculty - own events only)
 const deleteEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      mockStore.deleteEvent(req.params.id);
+      return res.status(200).json({ success: true, message: 'Event deleted successfully' });
+    }
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -145,6 +191,14 @@ const deleteEvent = async (req, res, next) => {
 // @access  Private (Faculty - own events only)
 const submitEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const updated = mockStore.updateEvent(req.params.id, { isPublished: true, status: 'pending' });
+      if (!updated) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      return res.status(200).json({ success: true, event: updated });
+    }
+
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -170,6 +224,14 @@ const submitEvent = async (req, res, next) => {
 // @access  Private (Admin)
 const approveEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const updated = mockStore.updateEvent(req.params.id, { status: 'approved', approvedBy: req.user._id, rejectionReason: '' });
+      if (!updated) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      return res.status(200).json({ success: true, event: updated });
+    }
+
     const event = await Event.findByIdAndUpdate(
       req.params.id,
       { status: 'approved', approvedBy: req.user._id, rejectionReason: '' },
@@ -191,6 +253,15 @@ const approveEvent = async (req, res, next) => {
 // @access  Private (Admin)
 const rejectEvent = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const { reason } = req.body;
+      const updated = mockStore.updateEvent(req.params.id, { status: 'rejected', rejectionReason: reason || 'No reason provided', approvedBy: null });
+      if (!updated) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      return res.status(200).json({ success: true, event: updated });
+    }
+
     const { reason } = req.body;
 
     const event = await Event.findByIdAndUpdate(

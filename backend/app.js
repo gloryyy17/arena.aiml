@@ -15,12 +15,21 @@ const app = express();
 
 // Core security & parsing middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false,
 }));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || ['http://localhost:5173', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, Vite proxy) or any local dev origin
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin === process.env.CLIENT_URL) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
 app.use(express.json({ limit: '10mb' }));

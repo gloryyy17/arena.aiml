@@ -1,17 +1,12 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   FileText,
   Sparkles,
   Copy,
   Check,
   RefreshCw,
-  Share2,
   Sliders,
   CheckCircle2,
-  Hash,
-  Globe,
-  Tag,
   AlertCircle,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';

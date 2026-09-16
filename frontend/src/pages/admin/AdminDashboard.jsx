@@ -1,15 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ShieldCheck,
   Check,
   X,
-  Sparkles,
-  Calendar,
-  Layers,
-  BarChart3,
-  Clock,
   CheckCircle2,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -29,11 +22,7 @@ const AdminDashboard = () => {
   const [message, setMessage] = useState('');
   const [filter, setFilter] = useState('pending'); // 'pending' | 'all'
 
-  useEffect(() => {
-    fetchEvents();
-  }, [filter]);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const url = filter === 'pending' ? '/events/admin/all?status=pending' : '/events/admin/all';
@@ -44,7 +33,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleApprove = async (id) => {
     try {

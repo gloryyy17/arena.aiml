@@ -1,5 +1,7 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
+const { isDbConnected } = require('../config/db');
+const mockStore = require('../config/mockStore');
 
 // @desc    Register for an event
 // @route   POST /api/registrations/:eventId
@@ -8,6 +10,15 @@ const registerForEvent = async (req, res, next) => {
   try {
     const { eventId } = req.params;
     const studentId = req.user._id;
+
+    // In-Memory Fallback if MongoDB is not connected
+    if (!isDbConnected()) {
+      const result = mockStore.registerStudent(studentId, eventId);
+      if (result.error) {
+        return res.status(result.status || 400).json({ success: false, message: result.error });
+      }
+      return res.status(201).json({ success: true, registration: result.registration });
+    }
 
     const event = await Event.findById(eventId);
     if (!event) {
@@ -57,6 +68,11 @@ const registerForEvent = async (req, res, next) => {
 // @access  Private (Student)
 const getMyRegistrations = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const registrations = mockStore.getMyRegistrations(req.user._id);
+      return res.status(200).json({ success: true, count: registrations.length, registrations });
+    }
+
     const registrations = await Registration.find({ student: req.user._id })
       .populate({
         path: 'event',
@@ -75,6 +91,14 @@ const getMyRegistrations = async (req, res, next) => {
 // @access  Private (Student)
 const cancelRegistration = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const result = mockStore.cancelRegistration(req.params.id, req.user._id);
+      if (result.error) {
+        return res.status(result.status || 400).json({ success: false, message: result.error });
+      }
+      return res.status(200).json({ success: true, message: 'Registration cancelled', registration: result.registration });
+    }
+
     const registration = await Registration.findOne({ _id: req.params.id, student: req.user._id });
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found' });

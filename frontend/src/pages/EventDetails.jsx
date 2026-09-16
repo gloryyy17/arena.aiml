@@ -17,6 +17,73 @@ import api, { getErrorMessage } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 
+const fallbackEvents = {
+  'sample-ai-hackathon': {
+    _id: 'sample-ai-hackathon',
+    title: 'AI Hackathon 2026',
+    description: '24-hour build sprint for AI enthusiasts across departments. Compete in teams to build innovative agentic AI workflows and intelligent campus assistants.',
+    category: 'Technical',
+    department: 'AI & Data Science',
+    venue: 'Main Auditorium & Innovation Lab',
+    startDate: '2026-09-15T09:00:00.000Z',
+    endDate: '2026-09-16T17:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 150,
+    fee: 0,
+    status: 'approved',
+    tags: ['AI', 'Hackathon', 'LLM', 'Autonomous Agents'],
+    createdBy: { name: 'Dr. Alan Turing', department: 'AI & Data Science' },
+  },
+  'sample-rangmanch': {
+    _id: 'sample-rangmanch',
+    title: 'Cultural Fest: Rangmanch',
+    description: 'Annual cultural extravaganza featuring inter-departmental dance, music, drama competitions, street plays, and talent showcases.',
+    category: 'Cultural',
+    department: 'Student Affairs',
+    venue: 'Open Air Theatre (OAT)',
+    startDate: '2026-09-20T10:00:00.000Z',
+    endDate: '2026-09-21T22:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 500,
+    fee: 0,
+    status: 'approved',
+    tags: ['Cultural', 'Dance', 'Music', 'Drama', 'Fest'],
+    createdBy: { name: 'Prof. Maya Sen', department: 'Student Affairs' },
+  },
+  'sample-ui-ux-design': {
+    _id: 'sample-ui-ux-design',
+    title: 'UI/UX Design Masterclass',
+    description: 'Hands-on design thinking, micro-interactions, Figma component architecture, and modern glassmorphic web styling workshop.',
+    category: 'Workshop',
+    department: 'Computer Science',
+    venue: 'Design Studio Lab 3',
+    startDate: '2026-09-25T14:00:00.000Z',
+    endDate: '2026-09-25T18:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 60,
+    fee: 50,
+    status: 'approved',
+    tags: ['UI/UX', 'Figma', 'Product Design'],
+    createdBy: { name: 'Prof. Rohit Sharma', department: 'Computer Science' },
+  },
+  'sample-cricket-cup': {
+    _id: 'sample-cricket-cup',
+    title: 'Inter-College Cricket Cup',
+    description: 'Annual 20-over knockout cricket tournament between AIML colleges and engineering institutions.',
+    category: 'Sports',
+    department: 'Physical Education',
+    venue: 'Sports Ground',
+    startDate: '2026-10-02T08:00:00.000Z',
+    endDate: '2026-10-05T18:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 200,
+    fee: 0,
+    status: 'approved',
+    tags: ['Cricket', 'Sports', 'Tournament'],
+    createdBy: { name: 'Coach Vikram Singh', department: 'Physical Education' },
+  },
+};
+
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -30,8 +97,18 @@ const EventDetails = () => {
   const [registerError, setRegisterError] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [userRegistrationId, setUserRegistrationId] = useState(null);
+
   useEffect(() => {
     let isMounted = true;
+
+    // Check if ID matches sample events
+    if (fallbackEvents[id]) {
+      setEvent(fallbackEvents[id]);
+      setLoading(false);
+      return;
+    }
 
     api.get(`/events/${id}`)
       .then((res) => {
@@ -50,11 +127,27 @@ const EventDetails = () => {
         }
       });
 
+    // Check user registration status
+    if (user?.role === 'student') {
+      api.get('/registrations/my-registrations')
+        .then((res) => {
+          if (isMounted && res.data?.registrations) {
+            const found = res.data.registrations.find(
+              (r) => (r.event?._id === id || r.event === id) && r.registrationStatus === 'confirmed'
+            );
+            if (found) {
+              setIsRegistered(true);
+              setUserRegistrationId(found._id);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
     return () => {
       isMounted = false;
     };
-  }, [id]);
-
+  }, [id, user]);
 
   const handleRegister = async () => {
     if (!user) {
@@ -69,11 +162,34 @@ const EventDetails = () => {
     try {
       const res = await api.post(`/registrations/${id}`);
       setRegisterSuccess(res.data?.message || 'Successfully registered for this event!');
+      setIsRegistered(true);
+      if (res.data?.registration?._id) {
+        setUserRegistrationId(res.data.registration._id);
+      }
       // Refresh event data to update participant counts
-      const updatedRes = await api.get(`/events/${id}`);
-      setEvent(updatedRes.data.event);
+      const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+      if (updatedRes?.data?.event) {
+        setEvent(updatedRes.data.event);
+      }
     } catch (err) {
       setRegisterError(getErrorMessage(err, 'Failed to register for event.'));
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    if (!userRegistrationId) return;
+    setRegistering(true);
+    setRegisterError('');
+    setRegisterSuccess('');
+    try {
+      await api.patch(`/registrations/${userRegistrationId}/cancel`);
+      setRegisterSuccess('Your registration has been cancelled.');
+      setIsRegistered(false);
+      setUserRegistrationId(null);
+    } catch (err) {
+      setRegisterError(getErrorMessage(err, 'Failed to cancel registration.'));
     } finally {
       setRegistering(false);
     }
@@ -272,24 +388,41 @@ const EventDetails = () => {
 
                 <div>
                   {user?.role === 'student' ? (
-                    <button
-                      onClick={handleRegister}
-                      disabled={registering || isDeadlinePassed || event.status !== 'approved'}
-                      className="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-white font-medium text-xs font-mono hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
-                    >
-                      {registering ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Processing Registration...</span>
-                        </>
-                      ) : isDeadlinePassed ? (
-                        'Registration Closed'
-                      ) : event.status !== 'approved' ? (
-                        'Event Not Open'
-                      ) : (
-                        'Confirm Registration'
-                      )}
-                    </button>
+                    isRegistered ? (
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 text-xs font-mono font-bold">
+                          <CheckCircle2 size={15} /> Registration Confirmed
+                        </span>
+                        {userRegistrationId && (
+                          <button
+                            onClick={handleCancelRegistration}
+                            disabled={registering}
+                            className="px-4 py-2 rounded-full border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 text-xs font-mono transition-colors disabled:opacity-50"
+                          >
+                            {registering ? 'Cancelling...' : 'Cancel Registration'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleRegister}
+                        disabled={registering || isDeadlinePassed || event.status !== 'approved'}
+                        className="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-white font-medium text-xs font-mono hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                      >
+                        {registering ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Processing Registration...</span>
+                          </>
+                        ) : isDeadlinePassed ? (
+                          'Registration Closed'
+                        ) : event.status !== 'approved' ? (
+                          'Event Not Open'
+                        ) : (
+                          'Confirm Registration'
+                        )}
+                      </button>
+                    )
                   ) : user ? (
                     <span className="text-xs font-mono opacity-70 px-4 py-2 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E]">
                       Logged in as {user.role?.toUpperCase()}

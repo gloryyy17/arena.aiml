@@ -1,12 +1,10 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
   Palette,
   FileText,
   Mail,
-  Send,
   MessageSquare,
   BarChart3,
   Compass,
@@ -16,7 +14,6 @@ import {
   Zap,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import { useAuth } from '../../context/AuthContext';
 
 const modules = [
   {
@@ -92,7 +89,6 @@ const modules = [
 ];
 
 const AIHub = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const navItems = [

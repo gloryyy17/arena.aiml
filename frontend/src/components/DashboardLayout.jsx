@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import { LogOut, Sparkles, LayoutDashboard } from 'lucide-react';
+import { LogOut, Sparkles } from 'lucide-react';
 
 const DashboardLayout = ({ children, navItems = [] }) => {
   const { user, logout } = useAuth();
