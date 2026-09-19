@@ -49,25 +49,31 @@ const generateEventDescription = async (req, res, next) => {
     );
 
     // Persist generation record
-    const record = await AIGeneration.create({
-      user: req.user._id,
-      event: eventId || null,
-      generationType: 'event_description',
-      promptName: generation.metadata.promptName,
-      promptVersion: generation.metadata.promptVersion,
-      provider: generation.metadata.provider,
-      model: generation.metadata.model,
-      inputParameters: { eventName, category, tone, desiredLength },
-      result: generation.data,
-      costTokens: generation.metadata.usage || {},
-      status: 'success',
-    });
+    let recordId = `gen-${Date.now()}`;
+    try {
+      const record = await AIGeneration.create({
+        user: req.user._id,
+        event: eventId || null,
+        generationType: 'event_description',
+        promptName: generation.metadata.promptName,
+        promptVersion: generation.metadata.promptVersion,
+        provider: generation.metadata.provider,
+        model: generation.metadata.model,
+        inputParameters: { eventName, category, tone, desiredLength },
+        result: generation.data,
+        costTokens: generation.metadata.usage || {},
+        status: 'success',
+      });
+      if (record?._id) recordId = record._id;
+    } catch {
+      // In-memory mode
+    }
 
     res.status(200).json({
       success: true,
       data: generation.data,
       metadata: {
-        generationId: record._id,
+        generationId: recordId,
         provider: generation.metadata.provider,
         model: generation.metadata.model,
         isCached: Boolean(generation.isCached),

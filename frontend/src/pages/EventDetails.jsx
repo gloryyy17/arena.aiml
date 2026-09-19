@@ -1,0 +1,655 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle,
+  Share2,
+  Check,
+  Tag,
+  CreditCard,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
+import api, { getErrorMessage } from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import { loadRazorpayScript } from '../utils/razorpay';
+
+const fallbackEvents = {
+  'sample-ai-hackathon': {
+    _id: 'sample-ai-hackathon',
+    title: 'AI Hackathon 2026',
+    description: '24-hour build sprint for AI enthusiasts across departments. Compete in teams to build innovative agentic AI workflows and intelligent campus assistants.',
+    category: 'Technical',
+    department: 'AI & Data Science',
+    venue: 'Main Auditorium & Innovation Lab',
+    startDate: '2026-09-15T09:00:00.000Z',
+    endDate: '2026-09-16T17:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 150,
+    fee: 0,
+    status: 'approved',
+    tags: ['AI', 'Hackathon', 'LLM', 'Autonomous Agents'],
+    createdBy: { name: 'Dr. Alan Turing', department: 'AI & Data Science' },
+  },
+  'sample-rangmanch': {
+    _id: 'sample-rangmanch',
+    title: 'Cultural Fest: Rangmanch',
+    description: 'Annual cultural extravaganza featuring inter-departmental dance, music, drama competitions, street plays, and talent showcases.',
+    category: 'Cultural',
+    department: 'Student Affairs',
+    venue: 'Open Air Theatre (OAT)',
+    startDate: '2026-09-20T10:00:00.000Z',
+    endDate: '2026-09-21T22:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 500,
+    fee: 0,
+    status: 'approved',
+    tags: ['Cultural', 'Dance', 'Music', 'Drama', 'Fest'],
+    createdBy: { name: 'Prof. Maya Sen', department: 'Student Affairs' },
+  },
+  'sample-ui-ux-design': {
+    _id: 'sample-ui-ux-design',
+    title: 'UI/UX Design Masterclass',
+    description: 'Hands-on design thinking, micro-interactions, Figma component architecture, and modern glassmorphic web styling workshop.',
+    category: 'Workshop',
+    department: 'Computer Science',
+    venue: 'Design Studio Lab 3',
+    startDate: '2026-09-25T14:00:00.000Z',
+    endDate: '2026-09-25T18:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 60,
+    fee: 50,
+    status: 'approved',
+    tags: ['UI/UX', 'Figma', 'Product Design'],
+    createdBy: { name: 'Prof. Rohit Sharma', department: 'Computer Science' },
+  },
+  'sample-cricket-cup': {
+    _id: 'sample-cricket-cup',
+    title: 'Inter-College Cricket Cup',
+    description: 'Annual 20-over knockout cricket tournament between AIML colleges and engineering institutions.',
+    category: 'Sports',
+    department: 'Physical Education',
+    venue: 'Sports Ground',
+    startDate: '2026-10-02T08:00:00.000Z',
+    endDate: '2026-10-05T18:00:00.000Z',
+    registrationDeadline: '2026-10-30T23:59:59.000Z',
+    maxParticipants: 200,
+    fee: 0,
+    status: 'approved',
+    tags: ['Cricket', 'Sports', 'Tournament'],
+    createdBy: { name: 'Coach Vikram Singh', department: 'Physical Education' },
+  },
+};
+
+const EventDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [registering, setRegistering] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState('');
+  const [registerError, setRegisterError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [userRegistrationId, setUserRegistrationId] = useState(null);
+  const [mockPaymentModal, setMockPaymentModal] = useState({ show: false, order: null, eventInfo: null });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check if ID matches sample events
+    if (fallbackEvents[id]) {
+      setEvent(fallbackEvents[id]);
+      setLoading(false);
+      return;
+    }
+
+    api.get(`/events/${id}`)
+      .then((res) => {
+        if (isMounted) {
+          setEvent(res.data.event);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(getErrorMessage(err, 'Event not found or failed to load.'));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    // Check user registration status
+    if (user?.role === 'student') {
+      api.get('/registrations/my-registrations')
+        .then((res) => {
+          if (isMounted && res.data?.registrations) {
+            const found = res.data.registrations.find(
+              (r) => (r.event?._id === id || r.event === id) && r.registrationStatus === 'confirmed'
+            );
+            if (found) {
+              setIsRegistered(true);
+              setUserRegistrationId(found._id);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, user]);
+
+  const handleRegister = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setRegistering(true);
+    setRegisterError('');
+    setRegisterSuccess('');
+
+    try {
+      // 1. If Paid Event, Initiate Razorpay Payment Flow
+      if (Number(event.fee || 0) > 0) {
+        const orderRes = await api.post('/payments/create-order', { eventId: id });
+        const { order, keyId, isMock } = orderRes.data;
+
+        // If backend operates in Mock/Simulation Mode (no live Razorpay keys set)
+        if (isMock) {
+          setMockPaymentModal({
+            show: true,
+            order,
+            eventInfo: {
+              title: event.title,
+              fee: event.fee,
+            },
+          });
+          setRegistering(false);
+          return;
+        }
+
+        // Live Razorpay Checkout Mode
+        const isScriptLoaded = await loadRazorpayScript();
+        if (!isScriptLoaded || !window.Razorpay) {
+          throw new Error('Razorpay SDK failed to load. Please check your network connection.');
+        }
+
+        const options = {
+          key: keyId,
+          amount: order.amount,
+          currency: order.currency || 'INR',
+          name: 'Arena.AIML',
+          description: `Registration for ${event.title}`,
+          order_id: order.orderId,
+          handler: async (response) => {
+            try {
+              setRegistering(true);
+              const verifyRes = await api.post('/payments/verify', {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                eventId: id,
+              });
+              setRegisterSuccess(verifyRes.data?.message || 'Payment verified and registration confirmed!');
+              setIsRegistered(true);
+              if (verifyRes.data?.registration?._id) {
+                setUserRegistrationId(verifyRes.data.registration._id);
+              }
+              const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+              if (updatedRes?.data?.event) {
+                setEvent(updatedRes.data.event);
+              }
+            } catch (vErr) {
+              setRegisterError(getErrorMessage(vErr, 'Payment verification failed.'));
+            } finally {
+              setRegistering(false);
+            }
+          },
+          prefill: {
+            name: user.name || '',
+            email: user.email || '',
+          },
+          theme: {
+            color: '#6366f1',
+          },
+          modal: {
+            ondismiss: () => {
+              setRegistering(false);
+            },
+          },
+        };
+
+        const razorpayInstance = new window.Razorpay(options);
+        razorpayInstance.on('payment.failed', (response) => {
+          setRegisterError(response.error?.description || 'Payment transaction failed or was cancelled.');
+          setRegistering(false);
+        });
+        razorpayInstance.open();
+        return;
+      }
+
+      // 2. Free Event Direct Registration Flow
+      const res = await api.post(`/registrations/${id}`);
+      setRegisterSuccess(res.data?.message || 'Successfully registered for this event!');
+      setIsRegistered(true);
+      if (res.data?.registration?._id) {
+        setUserRegistrationId(res.data.registration._id);
+      }
+      // Refresh event data to update participant counts
+      const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+      if (updatedRes?.data?.event) {
+        setEvent(updatedRes.data.event);
+      }
+    } catch (err) {
+      setRegisterError(getErrorMessage(err, 'Failed to register for event.'));
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleConfirmMockPayment = async () => {
+    if (!mockPaymentModal.order) return;
+    setRegistering(true);
+    setRegisterError('');
+    setRegisterSuccess('');
+
+    try {
+      const verifyRes = await api.post('/payments/verify', {
+        razorpayOrderId: mockPaymentModal.order.orderId,
+        razorpayPaymentId: `pay_mock_${Date.now()}`,
+        razorpaySignature: `sig_mock_${Date.now()}`,
+        eventId: id,
+      });
+
+      setRegisterSuccess(verifyRes.data?.message || 'Mock payment verified and registration confirmed!');
+      setIsRegistered(true);
+      if (verifyRes.data?.registration?._id) {
+        setUserRegistrationId(verifyRes.data.registration._id);
+      }
+      setMockPaymentModal({ show: false, order: null, eventInfo: null });
+
+      const updatedRes = await api.get(`/events/${id}`).catch(() => null);
+      if (updatedRes?.data?.event) {
+        setEvent(updatedRes.data.event);
+      }
+    } catch (err) {
+      setRegisterError(getErrorMessage(err, 'Failed to complete simulated payment.'));
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    if (!userRegistrationId) return;
+    setRegistering(true);
+    setRegisterError('');
+    setRegisterSuccess('');
+    try {
+      await api.patch(`/registrations/${userRegistrationId}/cancel`);
+      setRegisterSuccess('Your registration has been cancelled.');
+      setIsRegistered(false);
+      setUserRegistrationId(null);
+    } catch (err) {
+      setRegisterError(getErrorMessage(err, 'Failed to cancel registration.'));
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const isDeadlinePassed = event?.registrationDeadline
+    ? new Date() > new Date(event.registrationDeadline)
+    : false;
+
+  return (
+    <div className="min-h-screen bg-bg-light dark:bg-bg-dark text-ink-light dark:text-ink-dark">
+      <Navbar />
+
+      <main className="max-w-4xl mx-auto px-6 py-10">
+        {/* Back navigation & Share */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-xs font-mono opacity-70 hover:opacity-100 hover:text-accent transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Events
+          </button>
+
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] text-xs font-mono hover:border-accent hover:text-accent transition-colors"
+          >
+            {copied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
+            <span>{copied ? 'Link Copied' : 'Share Event'}</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-24 text-center space-y-4">
+            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="font-display text-sm font-semibold">Loading event details...</p>
+            <p className="text-xs opacity-60">Connecting to Arena event records</p>
+          </div>
+        ) : error ? (
+          <div className="p-12 text-center rounded-3xl border border-rose-500/20 bg-rose-500/5 space-y-4">
+            <AlertCircle size={40} className="mx-auto text-rose-500" />
+            <h2 className="font-display text-xl font-semibold">Unable to Load Event</h2>
+            <p className="text-xs md:text-sm opacity-75 max-w-md mx-auto">{error}</p>
+            <Link
+              to="/dashboard"
+              className="inline-block px-5 py-2.5 rounded-full bg-accent text-white text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              Return to Dashboard
+            </Link>
+          </div>
+        ) : event ? (
+          <motion.article
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            {/* Header info */}
+            <div className="p-6 md:p-8 rounded-3xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] shadow-sm space-y-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="font-mono text-xs uppercase bg-sticker text-ink-light px-3 py-1 rounded-full font-bold">
+                  {event.category}
+                </span>
+                <span
+                  className={`font-mono text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                    event.status === 'approved'
+                      ? 'bg-green-500/10 text-green-500'
+                      : event.status === 'rejected'
+                      ? 'bg-rose-500/10 text-rose-500'
+                      : 'bg-amber-500/10 text-amber-500'
+                  }`}
+                >
+                  {event.status}
+                </span>
+                {event.department && (
+                  <span className="text-xs font-mono opacity-60">
+                    Dept: {event.department}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="font-display text-3xl md:text-4xl font-semibold leading-tight">
+                {event.title}
+              </h1>
+
+              <div className="text-xs font-mono opacity-60">
+                Organized by: <span className="font-semibold">{event.createdBy?.name || 'Faculty Organizer'}</span>
+                {event.createdBy?.department && ` (${event.createdBy.department})`}
+              </div>
+            </div>
+
+            {/* Event Key Parameters Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-5 rounded-2xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] space-y-1">
+                <span className="text-xs font-mono uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                  <Calendar size={13} className="text-accent" /> Date
+                </span>
+                <p className="font-display text-sm font-semibold">
+                  {new Date(event.startDate).toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </p>
+                {event.endDate && event.endDate !== event.startDate && (
+                  <p className="text-[11px] opacity-60 font-mono">
+                    to {new Date(event.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </p>
+                )}
+              </div>
+
+              <div className="p-5 rounded-2xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] space-y-1">
+                <span className="text-xs font-mono uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                  <MapPin size={13} className="text-accent" /> Venue
+                </span>
+                <p className="font-display text-sm font-semibold truncate">{event.venue}</p>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] space-y-1">
+                <span className="text-xs font-mono uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                  <Users size={13} className="text-accent" /> Capacity
+                </span>
+                <p className="font-display text-sm font-semibold">
+                  {event.maxParticipants ? `${event.maxParticipants} Seats` : 'Open'}
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] space-y-1">
+                <span className="text-xs font-mono uppercase tracking-wider opacity-60 flex items-center gap-1.5">
+                  Fee
+                </span>
+                <p className="font-display text-base font-bold text-accent">
+                  {event.fee === 0 ? 'Free Entry' : `₹${event.fee}`}
+                </p>
+              </div>
+            </div>
+
+            {/* Full Description & Details */}
+            <div className="p-6 md:p-8 rounded-3xl border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E] shadow-sm space-y-6">
+              <div>
+                <h2 className="font-display text-lg font-semibold mb-3">About This Event</h2>
+                <p className="text-sm md:text-base opacity-80 leading-relaxed whitespace-pre-line">
+                  {event.description}
+                </p>
+              </div>
+
+              {event.tags && event.tags.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-mono uppercase tracking-wider opacity-60 mb-2 flex items-center gap-1.5">
+                    <Tag size={12} /> Relevant Topics
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {event.tags.map((t, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs font-mono px-3 py-1 rounded-full bg-black/5 dark:bg-white/5 border border-border-light dark:border-border-dark"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {event.registrationDeadline && (
+                <div className="pt-4 border-t border-border-light dark:border-border-dark flex items-center gap-2 text-xs font-mono opacity-70">
+                  <Clock size={14} className="text-amber-500" />
+                  <span>
+                    Registration Deadline: {new Date(event.registrationDeadline).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Registration Callout Box */}
+            <div className="p-6 md:p-8 rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/10 via-transparent to-accent/5 shadow-md space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-xl font-semibold">Join This Event</h3>
+                  <p className="text-xs md:text-sm opacity-75">
+                    {event.fee === 0
+                      ? 'Free entry for verified college students with instant confirmation.'
+                      : `Registration fee: ₹${event.fee}.`}
+                  </p>
+                </div>
+
+                <div>
+                  {user?.role === 'student' ? (
+                    isRegistered ? (
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 text-xs font-mono font-bold">
+                          <CheckCircle2 size={15} /> Registration Confirmed
+                        </span>
+                        {userRegistrationId && (
+                          <button
+                            onClick={handleCancelRegistration}
+                            disabled={registering}
+                            className="px-4 py-2 rounded-full border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 text-xs font-mono transition-colors disabled:opacity-50"
+                          >
+                            {registering ? 'Cancelling...' : 'Cancel Registration'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleRegister}
+                        disabled={registering || isDeadlinePassed || event.status !== 'approved'}
+                        className="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-white font-medium text-xs font-mono hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                      >
+                        {registering ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : isDeadlinePassed ? (
+                          'Registration Closed'
+                        ) : event.status !== 'approved' ? (
+                          'Event Not Open'
+                        ) : event.fee > 0 ? (
+                          <>
+                            <CreditCard size={15} />
+                            <span>Pay ₹{event.fee} & Register</span>
+                          </>
+                        ) : (
+                          'Confirm Free Registration'
+                        )}
+                      </button>
+                    )
+                  ) : user ? (
+                    <span className="text-xs font-mono opacity-70 px-4 py-2 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-[#1A1A1E]">
+                      Logged in as {user.role?.toUpperCase()}
+                    </span>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="w-full sm:w-auto px-8 py-3 rounded-full bg-accent text-white font-medium text-xs font-mono hover:opacity-90 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      Sign In to Register →
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {registerSuccess && (
+                <div className="p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-green-500 text-xs flex items-center gap-2 font-medium">
+                  <CheckCircle2 size={16} /> {registerSuccess}
+                </div>
+              )}
+
+              {registerError && (
+                <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2 font-medium">
+                  <AlertCircle size={16} /> {registerError}
+                </div>
+              )}
+            </div>
+
+            {/* Mock Payment Simulation Modal */}
+            {mockPaymentModal.show && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="w-full max-w-md bg-bg-light dark:bg-[#1C1C20] rounded-3xl border border-border-light dark:border-border-dark p-6 md:p-8 shadow-2xl space-y-5">
+                  <div className="flex items-center justify-between border-b border-border-light dark:border-border-dark pb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center">
+                        <CreditCard size={18} />
+                      </div>
+                      <div>
+                        <h4 className="font-display font-semibold text-base">Razorpay Test Checkout</h4>
+                        <span className="text-[10px] font-mono text-accent uppercase font-bold tracking-wider">Simulation Mode</span>
+                      </div>
+                    </div>
+                    <span className="font-mono text-xs px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold">
+                      Sandbox
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-border-light dark:border-border-dark text-xs font-mono">
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Event:</span>
+                      <span className="font-bold truncate max-w-[200px]">{event.title}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Order ID:</span>
+                      <span className="font-mono opacity-90 truncate max-w-[180px]">{mockPaymentModal.order?.orderId}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-border-light dark:border-border-dark">
+                      <span className="font-semibold text-sm">Amount Due:</span>
+                      <span className="font-display text-lg font-bold text-accent">₹{event.fee}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-2.5 text-xs">
+                    <ShieldCheck size={16} className="text-indigo-500 mt-0.5 shrink-0" />
+                    <p className="opacity-80 text-[11px] leading-relaxed">
+                      This is a live simulation. Clicking confirm will issue a valid mock transaction signature, store the payment receipt, and activate your ticket.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setMockPaymentModal({ show: false, order: null, eventInfo: null })}
+                      disabled={registering}
+                      className="flex-1 py-2.5 rounded-full border border-border-light dark:border-border-dark text-xs font-mono hover:bg-black/5 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmMockPayment}
+                      disabled={registering}
+                      className="flex-1 py-2.5 rounded-full bg-accent text-white text-xs font-mono font-medium hover:opacity-90 transition-all flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50"
+                    >
+                      {registering ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles size={14} />
+                          <span>Simulate Success</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.article>
+        ) : null}
+      </main>
+    </div>
+  );
+};
+
+export default EventDetails;

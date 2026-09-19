@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   Sparkles,
-  TrendingUp,
   ThumbsUp,
   ThumbsDown,
   AlertTriangle,
@@ -14,11 +12,9 @@ import {
   Users,
   MessageSquare,
   Send,
-  Sliders,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
-import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { label: '← AI Hub', to: '/ai-hub' },
@@ -30,7 +26,6 @@ const navItems = [
 ];
 
 const FeedbackAnalysis = () => {
-  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [feedbacks, setFeedbacks] = useState([]);
@@ -40,30 +35,27 @@ const FeedbackAnalysis = () => {
   const [feedbackForm, setFeedbackForm] = useState({ rating: 5, comment: '' });
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const triggerAnalysis = useCallback(async (eventId) => {
+    const targetId = eventId || selectedEventId;
+    if (!targetId) return;
+    setLoading(true);
+    setMessage('');
     try {
-      const res = await api.get('/events');
-      const evList = res.data.events || [];
-      setEvents(evList);
-      if (evList.length > 0) {
-        setSelectedEventId(evList[0]._id);
-        fetchEventData(evList[0]._id);
-      }
+      const res = await api.post('/ai/feedback/analyze', { eventId: targetId });
+      setAnalysis(res.data.data);
     } catch (err) {
-      console.warn('Failed to load events', err);
+      setMessage(err.response?.data?.message || 'Analysis generation failed.');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [selectedEventId]);
 
-  const fetchEventData = async (eventId) => {
+  const fetchEventData = useCallback(async (eventId) => {
     if (!eventId) return;
     try {
-      // 1. Fetch live feedback entries
+      // 1. Fetch live feedback entries (if permitted)
       const fRes = await api.get(`/feedback/event/${eventId}`).catch(() => ({ data: { feedbacks: [] } }));
-      setFeedbacks(fRes.data.feedbacks || []);
+      setFeedbacks(fRes.data?.feedbacks || []);
 
       // 2. Fetch existing analysis if available
       const aRes = await api.get(`/ai/feedback/analysis/${eventId}`).catch(() => ({ data: { data: null } }));
@@ -76,21 +68,25 @@ const FeedbackAnalysis = () => {
     } catch (err) {
       console.warn('Event data fetch error', err);
     }
-  };
+  }, [triggerAnalysis]);
 
-  const triggerAnalysis = async (eventId = selectedEventId) => {
-    if (!eventId) return;
-    setLoading(true);
-    setMessage('');
+  const fetchEvents = useCallback(async () => {
     try {
-      const res = await api.post('/ai/feedback/analyze', { eventId });
-      setAnalysis(res.data.data);
+      const res = await api.get('/events');
+      const evList = res.data.events || [];
+      setEvents(evList);
+      if (evList.length > 0) {
+        setSelectedEventId(evList[0]._id);
+        fetchEventData(evList[0]._id);
+      }
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Analysis generation failed.');
-    } finally {
-      setLoading(false);
+      console.warn('Failed to load events', err);
     }
-  };
+  }, [fetchEventData]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleEventChange = (e) => {
     const id = e.target.value;

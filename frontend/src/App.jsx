@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import EventDetails from './pages/EventDetails';
 import DashboardRouter from './pages/DashboardRouter';
 import ProtectedRoute from './components/ProtectedRoute';
 import ChatWidget from './components/ChatWidget';
@@ -9,6 +10,7 @@ import ChatWidget from './components/ChatWidget';
 // AI Hub Pages
 import AIHub from './pages/ai-hub/AIHub';
 import PosterGenerator from './pages/ai-hub/PosterGenerator';
+import CertificateGenerator from './pages/ai-hub/CertificateGenerator';
 import EventDescriptionGenerator from './pages/ai-hub/EventDescriptionGenerator';
 import EmailStudio from './pages/ai-hub/EmailStudio';
 import ChatbotPage from './pages/ai-hub/ChatbotPage';
@@ -21,8 +23,12 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/events" element={<Landing />} />
+        <Route path="/about" element={<Landing />} />
+        <Route path="/contact" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/events/:id" element={<EventDetails />} />
         
         {/* Protected Dashboard Route */}
         <Route
@@ -40,6 +46,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AIHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-hub/certificate"
+          element={
+            <ProtectedRoute>
+              <CertificateGenerator />
             </ProtectedRoute>
           }
         />

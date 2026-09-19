@@ -1,0 +1,365 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 540" width="100%" height="100%" style="background:#ffffff; font-family:'Segoe UI', Inter, -apple-system, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#14243b" />
+      <stop offset="100%" stop-color="#1e3a5f" />
+    </linearGradient>
+    
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#eff6ff" />
+      <stop offset="100%" stop-color="#dbeafe" />
+    </linearGradient>
+
+    <linearGradient id="gatewayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdf4" />
+      <stop offset="100%" stop-color="#dcfce7" />
+    </linearGradient>
+
+    <linearGradient id="coreGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fefce8" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#faf5ff" />
+      <stop offset="100%" stop-color="#f3e8ff" />
+    </linearGradient>
+
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff1f2" />
+      <stop offset="100%" stop-color="#ffe4e6" />
+    </linearGradient>
+
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdfa" />
+      <stop offset="100%" stop-color="#ccfbf1" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.08" />
+    </filter>
+
+    <!-- Markers -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#334155" />
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#b91c1c" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#7e22ce" />
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb" />
+    </marker>
+  </defs>
+
+  <!-- Canvas Container with Subtle Border -->
+  <rect x="5" y="5" width="910" height="530" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+
+  <!-- Diagram Title Bar -->
+  <rect x="5" y="5" width="910" height="34" rx="8" fill="url(#headerGrad)" />
+  <rect x="5" y="25" width="910" height="14" fill="url(#headerGrad)" />
+  <text x="460" y="27" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700" letter-spacing="0.5">
+    ARENA.AIML — HIGH-LEVEL SYSTEM ARCHITECTURE &amp; WORKFLOW
+  </text>
+
+  <!-- ================= SECTION 1: USER ACTORS (LEFT) ================= -->
+  <g id="layer-users" transform="translate(18, 52)">
+    <rect x="0" y="0" width="120" height="465" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" />
+    <text x="60" y="20" text-anchor="middle" fill="#334155" font-size="11" font-weight="700">USER ROLES</text>
+
+    <!-- Student Node -->
+    <g transform="translate(10, 35)">
+      <rect x="0" y="0" width="100" height="115" rx="6" fill="url(#userGrad)" stroke="#64748b" stroke-width="1" filter="url(#shadow)" />
+      <circle cx="50" cy="30" r="14" fill="#3b82f6" opacity="0.15" />
+      <text x="50" y="35" text-anchor="middle" font-size="16">🎓</text>
+      <text x="50" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e293b">Student</text>
+      <text x="50" y="76" text-anchor="middle" font-size="9" fill="#475569">• Discover &amp; RSVP</text>
+      <text x="50" y="89" text-anchor="middle" font-size="9" fill="#475569">• AI Assistant</text>
+      <text x="50" y="102" text-anchor="middle" font-size="9" fill="#475569">• Pay &amp; QR Pass</text>
+    </g>
+
+    <!-- Faculty Node -->
+    <g transform="translate(10, 175)">
+      <rect x="0" y="0" width="100" height="120" rx="6" fill="url(#userGrad)" stroke="#64748b" stroke-width="1" filter="url(#shadow)" />
+      <circle cx="50" cy="30" r="14" fill="#10b981" opacity="0.15" />
+      <text x="50" y="35" text-anchor="middle" font-size="16">👨‍🏫</text>
+      <text x="50" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e293b">Faculty</text>
+      <text x="50" y="76" text-anchor="middle" font-size="9" fill="#475569">• Event Creation</text>
+      <text x="50" y="89" text-anchor="middle" font-size="9" fill="#475569">• AI Poster Studio</text>
+      <text x="50" y="102" text-anchor="middle" font-size="9" fill="#475569">• Email Outreach</text>
+      <text x="50" y="115" text-anchor="middle" font-size="9" fill="#475569">• Feedback Review</text>
+    </g>
+
+    <!-- Admin Node -->
+    <g transform="translate(10, 320)">
+      <rect x="0" y="0" width="100" height="115" rx="6" fill="url(#userGrad)" stroke="#64748b" stroke-width="1" filter="url(#shadow)" />
+      <circle cx="50" cy="30" r="14" fill="#f59e0b" opacity="0.15" />
+      <text x="50" y="35" text-anchor="middle" font-size="16">🛡️</text>
+      <text x="50" y="60" text-anchor="middle" font-size="11" font-weight="700" fill="#1e293b">Admin</text>
+      <text x="50" y="76" text-anchor="middle" font-size="9" fill="#475569">• Event Approvals</text>
+      <text x="50" y="89" text-anchor="middle" font-size="9" fill="#475569">• User Management</text>
+      <text x="50" y="102" text-anchor="middle" font-size="9" fill="#475569">• Analytics &amp; Audits</text>
+    </g>
+  </g>
+
+  <!-- ================= SECTION 2: CLIENT PRESENTATION TIER ================= -->
+  <g id="layer-client" transform="translate(160, 52)">
+    <rect x="0" y="0" width="145" height="465" rx="6" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.3" />
+    <rect x="0" y="0" width="145" height="26" rx="6" fill="#0284c7" />
+    <rect x="0" y="20" width="145" height="6" fill="#0284c7" />
+    <text x="72" y="17" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">PRESENTATION TIER</text>
+    <text x="72" y="38" text-anchor="middle" fill="#0369a1" font-size="9" font-weight="600">React 19 + Vite 8 + Tailwind</text>
+
+    <!-- Client Component Boxes -->
+    <g transform="translate(8, 48)">
+      <rect x="0" y="0" width="129" height="70" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1" filter="url(#shadow)" />
+      <text x="64" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">Role-Based Views</text>
+      <text x="64" y="32" text-anchor="middle" font-size="8.5" fill="#334155">Student Portal &amp; Feed</text>
+      <text x="64" y="46" text-anchor="middle" font-size="8.5" fill="#334155">Faculty Event Studio</text>
+      <text x="64" y="60" text-anchor="middle" font-size="8.5" fill="#334155">Admin Control Center</text>
+    </g>
+
+    <g transform="translate(8, 130)">
+      <rect x="0" y="0" width="129" height="85" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1" filter="url(#shadow)" />
+      <text x="64" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">AI Hub Workspaces</text>
+      <text x="64" y="32" text-anchor="middle" font-size="8.5" fill="#334155">• Poster Generator</text>
+      <text x="64" y="46" text-anchor="middle" font-size="8.5" fill="#334155">• Event Description AI</text>
+      <text x="64" y="60" text-anchor="middle" font-size="8.5" fill="#334155">• Email Broadcast Studio</text>
+      <text x="64" y="74" text-anchor="middle" font-size="8.5" fill="#334155">• Feedback NLP Analytics</text>
+    </g>
+
+    <g transform="translate(8, 227)">
+      <rect x="0" y="0" width="129" height="75" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1" filter="url(#shadow)" />
+      <text x="64" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">Event &amp; Commerce</text>
+      <text x="64" y="32" text-anchor="middle" font-size="8.5" fill="#334155">• Interactive Calendar</text>
+      <text x="64" y="46" text-anchor="middle" font-size="8.5" fill="#334155">• Razorpay SDK Modal</text>
+      <text x="64" y="60" text-anchor="middle" font-size="8.5" fill="#334155">• Verified QR Pass Card</text>
+    </g>
+
+    <g transform="translate(8, 314)">
+      <rect x="0" y="0" width="129" height="60" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1" filter="url(#shadow)" />
+      <text x="64" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">Conversational UI</text>
+      <text x="64" y="34" text-anchor="middle" font-size="8.5" fill="#334155">• Real-time Campus Bot</text>
+      <text x="64" y="48" text-anchor="middle" font-size="8.5" fill="#334155">• Instant FAQ Assistant</text>
+    </g>
+
+    <g transform="translate(8, 386)">
+      <rect x="0" y="0" width="129" height="65" rx="4" fill="#ffffff" stroke="#bae6fd" stroke-width="1" filter="url(#shadow)" />
+      <text x="64" y="17" text-anchor="middle" font-size="10" font-weight="700" fill="#0369a1">Client Infrastructure</text>
+      <text x="64" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Axios Interceptors</text>
+      <text x="64" y="47" text-anchor="middle" font-size="8.5" fill="#334155">React Router DOM 7</text>
+      <text x="64" y="61" text-anchor="middle" font-size="8.5" fill="#334155">Framer Motion FX</text>
+    </g>
+  </g>
+
+  <!-- ================= SECTION 3: API GATEWAY & SECURITY ================= -->
+  <g id="layer-gateway" transform="translate(328, 52)">
+    <rect x="0" y="0" width="140" height="465" rx="6" fill="#f0fdf4" stroke="#4ade80" stroke-width="1.3" />
+    <rect x="0" y="0" width="140" height="26" rx="6" fill="#16a34a" />
+    <rect x="0" y="20" width="140" height="6" fill="#16a34a" />
+    <text x="70" y="17" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">API GATEWAY &amp; AUTH</text>
+    <text x="70" y="38" text-anchor="middle" fill="#15803d" font-size="9" font-weight="600">Express 5 REST Middleware</text>
+
+    <g transform="translate(8, 48)">
+      <rect x="0" y="0" width="124" height="65" rx="4" fill="#ffffff" stroke="#bbf7d0" stroke-width="1" filter="url(#shadow)" />
+      <text x="62" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Security Controls</text>
+      <text x="62" y="31" text-anchor="middle" font-size="8.5" fill="#334155">JWT Authentication</text>
+      <text x="62" y="45" text-anchor="middle" font-size="8.5" fill="#334155">Role-Based RBAC</text>
+      <text x="62" y="59" text-anchor="middle" font-size="8.5" fill="#334155">Helmet &amp; CORS Headers</text>
+    </g>
+
+    <g transform="translate(8, 125)">
+      <rect x="0" y="0" width="124" height="75" rx="4" fill="#ffffff" stroke="#bbf7d0" stroke-width="1" filter="url(#shadow)" />
+      <text x="62" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Core REST Routes</text>
+      <text x="62" y="30" text-anchor="middle" font-size="8.5" fill="#334155">/api/events (CRUD)</text>
+      <text x="62" y="44" text-anchor="middle" font-size="8.5" fill="#334155">/api/registrations</text>
+      <text x="62" y="58" text-anchor="middle" font-size="8.5" fill="#334155">/api/payments/razorpay</text>
+      <text x="62" y="72" text-anchor="middle" font-size="8.5" fill="#334155">/api/feedback</text>
+    </g>
+
+    <g transform="translate(8, 212)">
+      <rect x="0" y="0" width="124" height="75" rx="4" fill="#ffffff" stroke="#bbf7d0" stroke-width="1" filter="url(#shadow)" />
+      <text x="62" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">AI Endpoint Router</text>
+      <text x="62" y="30" text-anchor="middle" font-size="8.5" fill="#334155">/api/ai/poster/generate</text>
+      <text x="62" y="44" text-anchor="middle" font-size="8.5" fill="#334155">/api/ai/event/description</text>
+      <text x="62" y="58" text-anchor="middle" font-size="8.5" fill="#334155">/api/ai/recommendations</text>
+      <text x="62" y="72" text-anchor="middle" font-size="8.5" fill="#334155">/api/ai/feedback/analyze</text>
+    </g>
+
+    <g transform="translate(8, 300)">
+      <rect x="0" y="0" width="124" height="65" rx="4" fill="#ffffff" stroke="#bbf7d0" stroke-width="1" filter="url(#shadow)" />
+      <text x="62" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Async Handlers</text>
+      <text x="62" y="32" text-anchor="middle" font-size="8.5" fill="#334155">Error Interceptor</text>
+      <text x="62" y="47" text-anchor="middle" font-size="8.5" fill="#334155">Nodemailer Dispatcher</text>
+      <text x="62" y="61" text-anchor="middle" font-size="8.5" fill="#334155">Rate Limiting &amp; Logging</text>
+    </g>
+
+    <g transform="translate(8, 380)">
+      <rect x="0" y="0" width="124" height="72" rx="4" fill="#ffffff" stroke="#bbf7d0" stroke-width="1" filter="url(#shadow)" />
+      <text x="62" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">Razorpay Gateway</text>
+      <text x="62" y="32" text-anchor="middle" font-size="8.5" fill="#334155">Order Creation API</text>
+      <text x="62" y="47" text-anchor="middle" font-size="8.5" fill="#334155">HMAC-SHA256 Sig Verify</text>
+      <text x="62" y="62" text-anchor="middle" font-size="8.5" fill="#334155">Sandbox Simulation</text>
+    </g>
+  </g>
+
+  <!-- ================= SECTION 4: INTELLIGENT AI HUB & RECOMMENDATION ================= -->
+  <g id="layer-ai" transform="translate(492, 52)">
+    <rect x="0" y="0" width="220" height="300" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1.3" />
+    <rect x="0" y="0" width="220" height="26" rx="6" fill="#7e22ce" />
+    <rect x="0" y="20" width="220" height="6" fill="#7e22ce" />
+    <text x="110" y="17" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">AI HUB &amp; RECOMMENDATION ENGINE</text>
+    <text x="110" y="38" text-anchor="middle" fill="#6b21a8" font-size="9" font-weight="600">Central Intelligence &amp; Multi-Signal ML</text>
+
+    <!-- Recommendation Service Box -->
+    <g transform="translate(10, 48)">
+      <rect x="0" y="0" width="200" height="78" rx="4" fill="#ffffff" stroke="#d8b4fe" stroke-width="1" filter="url(#shadow)" />
+      <text x="100" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#7e22ce">Multi-Signal Recommendation Service</text>
+      <text x="10" y="32" font-size="8.5" fill="#334155">• <tspan font-weight="600">Jaccard Tag Sim:</tspan> J(A,B) = |A ∩ B| / |A ∪ B|</text>
+      <text x="10" y="46" font-size="8.5" fill="#334155">• <tspan font-weight="600">Interest Keyword Match:</tspan> Overlap scoring</text>
+      <text x="10" y="60" font-size="8.5" fill="#334155">• <tspan font-weight="600">Dept Affinity + Capacity Popularity + Recency</tspan></text>
+      <text x="10" y="74" font-size="8.5" fill="#6b21a8" font-weight="600">Score: S = Σ(w_i · signal_i) [0.0 - 1.0]</text>
+    </g>
+
+    <!-- AIService Coordinator & Registry -->
+    <g transform="translate(10, 134)">
+      <rect x="0" y="0" width="200" height="72" rx="4" fill="#ffffff" stroke="#d8b4fe" stroke-width="1" filter="url(#shadow)" />
+      <text x="100" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#7e22ce">AIService &amp; PromptRegistry</text>
+      <text x="100" y="31" text-anchor="middle" font-size="8.5" fill="#334155">Dynamic Variable Interpolation &amp; Caching</text>
+      <text x="100" y="45" text-anchor="middle" font-size="8.5" fill="#334155">Schema Validation (JSON Mode, Temp: 0.2)</text>
+      <text x="100" y="61" text-anchor="middle" font-size="8.5" fill="#6b21a8" font-weight="600">Exponential Backoff &amp; Fallback Circuit</text>
+    </g>
+
+    <!-- Providers Pool -->
+    <g transform="translate(10, 214)">
+      <rect x="0" y="0" width="200" height="74" rx="4" fill="#ffffff" stroke="#d8b4fe" stroke-width="1" filter="url(#shadow)" />
+      <text x="100" y="15" text-anchor="middle" font-size="9.5" font-weight="700" fill="#7e22ce">Multi-Provider Orchestration Pool</text>
+      <rect x="8" y="22" width="88" height="22" rx="3" fill="#eff6ff" stroke="#93c5fd" stroke-width="0.8" />
+      <text x="52" y="36" text-anchor="middle" font-size="8.5" font-weight="600" fill="#1d4ed8">Google Gemini</text>
+
+      <rect x="104" y="22" width="88" height="22" rx="3" fill="#f0fdf4" stroke="#86efac" stroke-width="0.8" />
+      <text x="148" y="36" text-anchor="middle" font-size="8.5" font-weight="600" fill="#15803d">OpenAI GPT-4o</text>
+
+      <rect x="8" y="48" width="88" height="20" rx="3" fill="#fdf4ff" stroke="#f0abfc" stroke-width="0.8" />
+      <text x="52" y="62" text-anchor="middle" font-size="8" font-weight="600" fill="#a21caf">Pollinations Image</text>
+
+      <rect x="104" y="48" width="88" height="20" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.8" />
+      <text x="148" y="62" text-anchor="middle" font-size="8" font-weight="600" fill="#475569">Mock Deterministic</text>
+    </g>
+  </g>
+
+  <!-- ================= SECTION 5: PERSISTENCE & DATA LAYER ================= -->
+  <g id="layer-db" transform="translate(492, 362)">
+    <rect x="0" y="0" width="220" height="155" rx="6" fill="#fff1f2" stroke="#f43f5e" stroke-width="1.3" />
+    <rect x="0" y="0" width="220" height="24" rx="6" fill="#e11d48" />
+    <rect x="0" y="18" width="220" height="6" fill="#e11d48" />
+    <text x="110" y="16" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">DATA PERSISTENCE &amp; STORAGE</text>
+
+    <g transform="translate(10, 32)">
+      <rect x="0" y="0" width="94" height="50" rx="4" fill="#ffffff" stroke="#fecdd3" stroke-width="1" filter="url(#shadow)" />
+      <text x="47" y="16" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">MongoDB Atlas</text>
+      <text x="47" y="30" text-anchor="middle" font-size="8" fill="#475569">Event Schemas</text>
+      <text x="47" y="42" text-anchor="middle" font-size="8" fill="#475569">Registrations</text>
+    </g>
+
+    <g transform="translate(114, 32)">
+      <rect x="0" y="0" width="96" height="50" rx="4" fill="#ffffff" stroke="#fecdd3" stroke-width="1" filter="url(#shadow)" />
+      <text x="48" y="16" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">MockStore Cache</text>
+      <text x="48" y="30" text-anchor="middle" font-size="8" fill="#475569">Offline Dev Mode</text>
+      <text x="48" y="42" text-anchor="middle" font-size="8" fill="#475569">TTL Query Cache</text>
+    </g>
+
+    <g transform="translate(10, 90)">
+      <rect x="0" y="0" width="200" height="55" rx="4" fill="#ffffff" stroke="#fecdd3" stroke-width="1" filter="url(#shadow)" />
+      <text x="100" y="15" text-anchor="middle" font-size="9" font-weight="700" fill="#be123c">Collections &amp; Audit Logs</text>
+      <text x="10" y="30" font-size="8" fill="#334155">• Users &amp; Profiles (Interests, Department)</text>
+      <text x="10" y="42" font-size="8" fill="#334155">• AIGenerations (Prompts, Model, Latency, Output)</text>
+      <text x="10" y="52" font-size="8" fill="#334155">• Payments &amp; Invoices (Razorpay Signatures)</text>
+    </g>
+  </g>
+
+  <!-- ================= SECTION 6: DELIVERABLES & OUTCOMES ================= -->
+  <g id="layer-output" transform="translate(734, 52)">
+    <rect x="0" y="0" width="168" height="465" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.3" />
+    <rect x="0" y="0" width="168" height="26" rx="6" fill="#0d9488" />
+    <rect x="0" y="20" width="168" height="6" fill="#0d9488" />
+    <text x="84" y="17" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">OUTPUTS &amp; OUTCOMES</text>
+    <text x="84" y="38" text-anchor="middle" fill="#0f766e" font-size="9" font-weight="600">Smart Campus Deliverables</text>
+
+    <g transform="translate(10, 48)">
+      <rect x="0" y="0" width="148" height="70" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="1" filter="url(#shadow)" />
+      <text x="74" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">Personalized Feed</text>
+      <text x="74" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Ranked events tailored</text>
+      <text x="74" y="47" text-anchor="middle" font-size="8.5" fill="#334155">to student interests &amp;</text>
+      <text x="74" y="61" text-anchor="middle" font-size="8.5" fill="#334155">past participation history</text>
+    </g>
+
+    <g transform="translate(10, 126)">
+      <rect x="0" y="0" width="148" height="74" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="1" filter="url(#shadow)" />
+      <text x="74" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">AI Promotional Posters</text>
+      <text x="74" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Prompt-synthesized</text>
+      <text x="74" y="47" text-anchor="middle" font-size="8.5" fill="#334155">high-resolution posters</text>
+      <text x="74" y="61" text-anchor="middle" font-size="8.5" fill="#334155">in curated design styles</text>
+    </g>
+
+    <g transform="translate(10, 208)">
+      <rect x="0" y="0" width="148" height="74" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="1" filter="url(#shadow)" />
+      <text x="74" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">Verified QR Passes</text>
+      <text x="74" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Tamper-evident tickets</text>
+      <text x="74" y="47" text-anchor="middle" font-size="8.5" fill="#334155">generated post-payment</text>
+      <text x="74" y="61" text-anchor="middle" font-size="8.5" fill="#334155">for fast physical check-in</text>
+    </g>
+
+    <g transform="translate(10, 290)">
+      <rect x="0" y="0" width="148" height="74" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="1" filter="url(#shadow)" />
+      <text x="74" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">NLP Sentiment Insights</text>
+      <text x="74" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Thematic clustering,</text>
+      <text x="74" y="47" text-anchor="middle" font-size="8.5" fill="#334155">sentiment breakdown,</text>
+      <text x="74" y="61" text-anchor="middle" font-size="8.5" fill="#334155">&amp; priority action items</text>
+    </g>
+
+    <g transform="translate(10, 372)">
+      <rect x="0" y="0" width="148" height="78" rx="4" fill="#ffffff" stroke="#99f6e4" stroke-width="1" filter="url(#shadow)" />
+      <text x="74" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#0f766e">Targeted Campaigns</text>
+      <text x="74" y="33" text-anchor="middle" font-size="8.5" fill="#334155">Automated HTML emails,</text>
+      <text x="74" y="47" text-anchor="middle" font-size="8.5" fill="#334155">announcement blasts &amp;</text>
+      <text x="74" y="61" text-anchor="middle" font-size="8.5" fill="#334155">intelligent registration</text>
+      <text x="74" y="73" text-anchor="middle" font-size="8.5" fill="#334155">reminders</text>
+    </g>
+  </g>
+
+  <!-- ================= FLOW CONNECTING ARROWS ================= -->
+  <!-- Users -> Client -->
+  <line x1="138" y1="140" x2="160" y2="140" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)" />
+  <line x1="138" y1="280" x2="160" y2="280" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)" />
+  <line x1="138" y1="410" x2="160" y2="410" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- Client <-> Gateway -->
+  <line x1="305" y1="200" x2="328" y2="200" stroke="#0284c7" stroke-width="2" marker-end="url(#arrowBlue)" />
+  <line x1="328" y1="220" x2="305" y2="220" stroke="#16a34a" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Gateway <-> AI Hub -->
+  <path d="M 468 180 L 492 180" stroke="#7e22ce" stroke-width="2" marker-end="url(#arrowPurple)" />
+  <path d="M 492 200 L 468 200" stroke="#16a34a" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Gateway <-> Database -->
+  <path d="M 468 410 L 492 410" stroke="#e11d48" stroke-width="2" marker-end="url(#arrowRed)" />
+  <path d="M 492 430 L 468 430" stroke="#16a34a" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- AI Hub <-> Database -->
+  <line x1="602" y1="352" x2="602" y2="362" stroke="#475569" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow)" />
+
+  <!-- Hub / Gateway -> Output Deliverables -->
+  <path d="M 712 180 L 734 180" stroke="#0d9488" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 712 250 L 734 250" stroke="#0d9488" stroke-width="2" marker-end="url(#arrow)" />
+  <path d="M 712 430 L 734 430" stroke="#0d9488" stroke-width="2" marker-end="url(#arrow)" />
+</svg>

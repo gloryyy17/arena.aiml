@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail,
@@ -14,8 +14,6 @@ import {
   Clock,
   ShieldAlert,
   Sliders,
-  Check,
-  Upload,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
@@ -64,18 +62,18 @@ const EmailStudio = () => {
   const [sendSuccess, setSendSuccess] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, []);
-
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     try {
       const res = await api.get('/ai/email/campaigns');
       setCampaigns(res.data.campaigns || []);
     } catch (err) {
       console.warn('Failed to load campaigns', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   const handleInputChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
