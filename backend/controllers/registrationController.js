@@ -3,51 +3,73 @@ const Event = require('../models/Event');
 const Payment = require('../models/Payment');
 const { createRazorpayOrder, verifyPaymentSignature } = require('../services/paymentService');
 
+// @desc    Register for an event
+// @route   POST /api/registrations/:eventId
+// @access  Private (Student)
 const registerForEvent = async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.eventId);
+    const { eventId } = req.params;
+    const studentId = req.user._id;
 
-    if (!event || event.status !== 'approved') {
-      return res.status(404).json({ success: false, message: 'Event not available for registration' });
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
-    if (new Date() > event.registrationDeadline) {
+    if (event.status !== 'approved' || !event.isPublished) {
+      return res.status(400).json({ success: false, message: 'Event is not open for registration' });
+    }
+
+    if (new Date() > new Date(event.registrationDeadline)) {
       return res.status(400).json({ success: false, message: 'Registration deadline has passed' });
     }
 
-    const existing = await Registration.findOne({ student: req.user._id, event: event._id });
+    // Reactivate a previously cancelled registration instead of blocking re-registration
+    const existing = await Registration.findOne({ student: studentId, event: eventId });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Already registered for this event' });
+      if (existing.registrationStatus === 'cancelled') {
+        existing.registrationStatus = 'confirmed';
+        existing.paymentStatus = event.fee > 0 ? 'pending' : 'not_required';
+        await existing.save();
+        return res.status(200).json({
+          success: true,
+          message: 'Registration reactivated',
+          registration: existing,
+          requiresPayment: event.fee > 0,
+        });
+      }
+      return res.status(400).json({ success: false, message: 'You are already registered for this event' });
     }
 
-    const confirmedCount = await Registration.countDocuments({
-      event: event._id,
-      registrationStatus: 'confirmed',
-    });
-    if (confirmedCount >= event.maxParticipants) {
-      return res.status(400).json({ success: false, message: 'Event is full' });
+    const currentCount = await Registration.countDocuments({ event: eventId, registrationStatus: 'confirmed' });
+    if (currentCount >= event.maxParticipants) {
+      return res.status(400).json({ success: false, message: 'Event is at full capacity' });
     }
 
+    // Free event — no payment step needed
     if (event.fee === 0) {
       const registration = await Registration.create({
-        student: req.user._id,
-        event: event._id,
+        student: studentId,
+        event: eventId,
+        registrationStatus: 'confirmed',
         paymentStatus: 'not_required',
       });
       return res.status(201).json({ success: true, registration, requiresPayment: false });
     }
 
+    // Paid event — create registration + Razorpay order
     const registration = await Registration.create({
-      student: req.user._id,
-      event: event._id,
+      student: studentId,
+      event: eventId,
+      registrationStatus: 'confirmed',
       paymentStatus: 'pending',
     });
 
     const order = await createRazorpayOrder(event.fee, registration._id.toString());
 
     const payment = await Payment.create({
-      student: req.user._id,
-      event: event._id,
+      student: studentId,
+      event: eventId,
       registration: registration._id,
       amount: event.fee,
       razorpayOrderId: order.id,
@@ -68,6 +90,9 @@ const registerForEvent = async (req, res, next) => {
   }
 };
 
+// @desc    Verify Razorpay payment and confirm registration
+// @route   POST /api/registrations/verify-payment
+// @access  Private (Student)
 const verifyPayment = async (req, res, next) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -96,10 +121,16 @@ const verifyPayment = async (req, res, next) => {
   }
 };
 
+// @desc    Get current user's registrations
+// @route   GET /api/registrations/my-registrations
+// @access  Private (Student)
 const getMyRegistrations = async (req, res, next) => {
   try {
     const registrations = await Registration.find({ student: req.user._id })
-      .populate('event', 'title startDate venue fee posterUrl')
+      .populate({
+        path: 'event',
+        select: 'title description category venue startDate endDate fee posterUrl status',
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: registrations.length, registrations });
@@ -108,6 +139,9 @@ const getMyRegistrations = async (req, res, next) => {
   }
 };
 
+// @desc    Get all registrations for an event (organizer view)
+// @route   GET /api/registrations/event/:eventId
+// @access  Private (event creator)
 const getEventRegistrations = async (req, res, next) => {
   try {
     const event = await Event.findById(req.params.eventId);
@@ -128,21 +162,20 @@ const getEventRegistrations = async (req, res, next) => {
   }
 };
 
+// @desc    Cancel registration
+// @route   PATCH /api/registrations/:id/cancel
+// @access  Private (Student)
 const cancelRegistration = async (req, res, next) => {
   try {
-    const registration = await Registration.findById(req.params.id);
-
+    const registration = await Registration.findOne({ _id: req.params.id, student: req.user._id });
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found' });
-    }
-    if (registration.student.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     registration.registrationStatus = 'cancelled';
     await registration.save();
 
-    res.status(200).json({ success: true, message: 'Registration cancelled' });
+    res.status(200).json({ success: true, message: 'Registration cancelled', registration });
   } catch (error) {
     next(error);
   }
