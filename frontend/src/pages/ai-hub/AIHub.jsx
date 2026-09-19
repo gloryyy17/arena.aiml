@@ -11,15 +11,26 @@ import {
   Cpu,
   ArrowRight,
   ShieldCheck,
+  Award,
   Zap,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 
 const modules = [
   {
+    id: 'certificate',
+    title: 'AI Certificate Generator',
+    description: 'Issue authentic institutional certificates with AI citations, custom participants, and tamper-proof verification.',
+    icon: Award,
+    to: '/ai-hub/certificate',
+    badge: 'Credentials',
+    badgeColor: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+    color: 'from-indigo-500/20 to-blue-500/5',
+  },
+  {
     id: 'poster',
-    title: 'AI Poster Generator',
-    description: 'Design photorealistic and stylized high-res event posters with custom styles, dimensions, and visual themes.',
+    title: 'AI Poster Studio',
+    description: 'Generate high-impact portrait posters with dynamic event parameters, branding logos, and QR codes.',
     icon: Palette,
     to: '/ai-hub/poster',
     badge: 'Creativity',

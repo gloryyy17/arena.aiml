@@ -10,12 +10,16 @@ import {
   Mail,
   BarChart3,
   CheckCircle,
+  CheckCircle2,
   AlertCircle,
   Edit3,
   Trash2,
   ExternalLink,
   RefreshCw,
   X,
+  Send,
+  Clock,
+  Award,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api, { getErrorMessage } from '../../api/axios';
@@ -23,6 +27,7 @@ import api, { getErrorMessage } from '../../api/axios';
 const navItems = [
   { label: 'My Events', to: '/dashboard' },
   { label: '✨ Launch AI Hub', to: '/ai-hub' },
+  { label: '📜 Certificate Studio', to: '/ai-hub/certificate' },
   { label: '🎨 Poster Studio', to: '/ai-hub/poster' },
   { label: '📝 Event Copy', to: '/ai-hub/description' },
   { label: '📧 Email Studio', to: '/ai-hub/email' },
@@ -80,18 +85,24 @@ const FacultyDashboard = () => {
 
 
   // Create Event Handler
-  const handleCreateEvent = async (e) => {
-    e.preventDefault();
+  const handleCreateEvent = async (e, submitImmediately = false) => {
+    if (e && e.preventDefault) e.preventDefault();
     setCreating(true);
     setCreateError('');
     setMessage('');
     try {
       const payload = {
         ...newEvent,
+        status: submitImmediately ? 'pending' : 'draft',
+        isPublished: false,
         tags: newEvent.tags.split(',').map((t) => t.trim()).filter(Boolean),
       };
       const res = await api.post('/events', payload);
-      setMessage('Event draft created successfully! Submit it for admin approval whenever ready.');
+      setMessage(
+        submitImmediately
+          ? 'Event created and submitted for Admin approval!'
+          : 'Event draft created successfully! Submit it for admin approval whenever ready.'
+      );
       setShowCreateModal(false);
       setNewEvent(emptyEventForm);
       if (res.data.event) {
@@ -330,16 +341,34 @@ const FacultyDashboard = () => {
               </div>
 
               {/* Actions Toolbar */}
-              <div className="pt-3 border-t border-border-light dark:border-border-dark space-y-2.5">
+              <div className="pt-3 border-t border-border-light dark:border-border-dark space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs font-bold">{ev.fee === 0 ? 'Free' : `₹${ev.fee}`}</span>
 
                   <div className="flex items-center gap-1.5">
+                    {/* Design Poster shortcut */}
+                    <Link
+                      to="/ai-hub/poster"
+                      className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-pink-500 hover:border-pink-500/30 transition-colors"
+                      title="Design Event Poster"
+                    >
+                      <Palette size={14} />
+                    </Link>
+
+                    {/* Issue Certificates shortcut */}
+                    <Link
+                      to="/ai-hub/certificate"
+                      className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-indigo-500 hover:border-indigo-500/30 transition-colors"
+                      title="Issue Certificates"
+                    >
+                      <Award size={14} />
+                    </Link>
+
                     {/* View details */}
                     <Link
                       to={`/events/${ev._id}`}
                       className="p-1.5 rounded-lg border border-border-light dark:border-border-dark opacity-60 hover:opacity-100 hover:text-accent transition-colors"
-                      title="View Event Details"
+                      title="View Live Event"
                     >
                       <ExternalLink size={14} />
                     </Link>
@@ -364,27 +393,54 @@ const FacultyDashboard = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-mono">
-                  {ev.status === 'pending' && !ev.isPublished && (
+                {/* Status & Submission Block */}
+                <div>
+                  {(ev.status === 'draft' || (!ev.isPublished && ev.status !== 'pending' && ev.status !== 'approved' && ev.status !== 'rejected')) && (
                     <button
                       onClick={() => handleSubmitForApproval(ev._id)}
-                      className="text-xs font-mono px-3 py-1 rounded-full bg-accent text-white hover:opacity-90 transition-opacity"
+                      className="w-full py-2 px-3 rounded-xl bg-accent text-white font-mono text-xs font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      Submit for Approval
+                      <Send size={13} /> Submit for Admin Approval
                     </button>
                   )}
-                  {ev.status === 'approved' && (
-                    <Link
-                      to="/ai-hub/feedback"
-                      className="text-xs font-mono text-accent hover:underline"
-                    >
-                      View Feedback →
-                    </Link>
+
+                  {ev.status === 'pending' && (
+                    <div className="w-full p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Clock size={13} /> Pending Admin Review
+                      </span>
+                      <span className="text-[10px] opacity-75">In Queue</span>
+                    </div>
                   )}
-                  {ev.status === 'rejected' && ev.rejectionReason && (
-                    <span className="text-[11px] text-rose-500 truncate" title={ev.rejectionReason}>
-                      Reason: {ev.rejectionReason}
-                    </span>
+
+                  {ev.status === 'approved' && (
+                    <div className="w-full p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <CheckCircle2 size={13} /> Approved & Published
+                      </span>
+                      <Link to="/ai-hub/feedback" className="text-[11px] underline hover:opacity-80">
+                        Feedback →
+                      </Link>
+                    </div>
+                  )}
+
+                  {ev.status === 'rejected' && (
+                    <div className="w-full p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-mono text-rose-500 font-bold">
+                        <span className="flex items-center gap-1">
+                          <AlertCircle size={13} /> Rejected by Admin
+                        </span>
+                      </div>
+                      <p className="text-xs text-rose-600 dark:text-rose-400 leading-snug font-sans bg-rose-500/5 p-2 rounded-lg border border-rose-500/15">
+                        <span className="font-semibold">Reason:</span> {ev.rejectionReason || 'No specific feedback provided by administrator.'}
+                      </p>
+                      <button
+                        onClick={() => handleEditClick(ev)}
+                        className="w-full py-1.5 rounded-lg bg-rose-500 text-white text-xs font-mono font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Edit3 size={13} /> Edit & Resubmit
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -533,22 +589,37 @@ const FacultyDashboard = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-3">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 rounded-full border border-border-light dark:border-border-dark font-mono text-xs"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-border-light dark:border-border-dark font-mono text-xs opacity-75 hover:opacity-100"
                 >
-                  CANCEL
+                  Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="flex-1 py-2.5 rounded-full bg-accent text-white font-mono text-xs font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
-                >
-                  {creating && <RefreshCw size={13} className="animate-spin" />}
-                  {creating ? 'CREATING...' : 'CREATE DRAFT'}
-                </button>
+                <div className="flex-1 flex items-center gap-2 w-full">
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    onClick={(e) => handleCreateEvent(e, false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-accent/40 text-accent bg-accent/5 font-mono text-xs font-semibold hover:bg-accent/10 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    Save as Draft
+                  </button>
+                  <button
+                    type="button"
+                    disabled={creating}
+                    onClick={(e) => handleCreateEvent(e, true)}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-accent text-white font-mono text-xs font-semibold hover:opacity-90 flex items-center justify-center gap-1.5 shadow-md disabled:opacity-50 transition-all"
+                  >
+                    {creating ? (
+                      <RefreshCw size={13} className="animate-spin" />
+                    ) : (
+                      <Send size={13} />
+                    )}
+                    {creating ? 'Submitting...' : 'Create & Submit'}
+                  </button>
+                </div>
               </div>
             </form>
           </motion.div>

@@ -192,7 +192,7 @@ const deleteEvent = async (req, res, next) => {
 const submitEvent = async (req, res, next) => {
   try {
     if (!isDbConnected()) {
-      const updated = mockStore.updateEvent(req.params.id, { isPublished: true, status: 'pending' });
+      const updated = mockStore.updateEvent(req.params.id, { isPublished: false, status: 'pending', rejectionReason: '' });
       if (!updated) {
         return res.status(404).json({ success: false, message: 'Event not found' });
       }
@@ -209,8 +209,9 @@ const submitEvent = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    event.isPublished = true;
+    event.isPublished = false;
     event.status = 'pending';
+    event.rejectionReason = '';
     await event.save();
 
     res.status(200).json({ success: true, event });
@@ -225,7 +226,12 @@ const submitEvent = async (req, res, next) => {
 const approveEvent = async (req, res, next) => {
   try {
     if (!isDbConnected()) {
-      const updated = mockStore.updateEvent(req.params.id, { status: 'approved', approvedBy: req.user._id, rejectionReason: '' });
+      const updated = mockStore.updateEvent(req.params.id, {
+        status: 'approved',
+        isPublished: true,
+        approvedBy: req.user._id,
+        rejectionReason: '',
+      });
       if (!updated) {
         return res.status(404).json({ success: false, message: 'Event not found' });
       }
@@ -234,7 +240,7 @@ const approveEvent = async (req, res, next) => {
 
     const event = await Event.findByIdAndUpdate(
       req.params.id,
-      { status: 'approved', approvedBy: req.user._id, rejectionReason: '' },
+      { status: 'approved', isPublished: true, approvedBy: req.user._id, rejectionReason: '' },
       { new: true }
     );
 
@@ -253,20 +259,28 @@ const approveEvent = async (req, res, next) => {
 // @access  Private (Admin)
 const rejectEvent = async (req, res, next) => {
   try {
+    const { reason } = req.body;
     if (!isDbConnected()) {
-      const { reason } = req.body;
-      const updated = mockStore.updateEvent(req.params.id, { status: 'rejected', rejectionReason: reason || 'No reason provided', approvedBy: null });
+      const updated = mockStore.updateEvent(req.params.id, {
+        status: 'rejected',
+        isPublished: false,
+        rejectionReason: reason || 'No reason provided by administration.',
+        approvedBy: null,
+      });
       if (!updated) {
         return res.status(404).json({ success: false, message: 'Event not found' });
       }
       return res.status(200).json({ success: true, event: updated });
     }
 
-    const { reason } = req.body;
-
     const event = await Event.findByIdAndUpdate(
       req.params.id,
-      { status: 'rejected', rejectionReason: reason || 'No reason provided', approvedBy: null },
+      {
+        status: 'rejected',
+        isPublished: false,
+        rejectionReason: reason || 'No reason provided by administration.',
+        approvedBy: null,
+      },
       { new: true }
     );
 

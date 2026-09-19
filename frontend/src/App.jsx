@@ -10,6 +10,7 @@ import ChatWidget from './components/ChatWidget';
 // AI Hub Pages
 import AIHub from './pages/ai-hub/AIHub';
 import PosterGenerator from './pages/ai-hub/PosterGenerator';
+import CertificateGenerator from './pages/ai-hub/CertificateGenerator';
 import EventDescriptionGenerator from './pages/ai-hub/EventDescriptionGenerator';
 import EmailStudio from './pages/ai-hub/EmailStudio';
 import ChatbotPage from './pages/ai-hub/ChatbotPage';
@@ -45,6 +46,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AIHub />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-hub/certificate"
+          element={
+            <ProtectedRoute>
+              <CertificateGenerator />
             </ProtectedRoute>
           }
         />

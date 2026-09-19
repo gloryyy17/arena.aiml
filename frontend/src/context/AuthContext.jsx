@@ -38,8 +38,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const switchRole = async (targetRole) => {
+    const roleCredentials = {
+      faculty: { email: 'faculty@arena.aiml', password: 'password123' },
+      admin: { email: 'admin@arena.aiml', password: 'password123' },
+      student: { email: 'student@arena.aiml', password: 'password123' },
+    };
+    const creds = roleCredentials[targetRole] || roleCredentials.faculty;
+    return await login(creds.email, creds.password);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

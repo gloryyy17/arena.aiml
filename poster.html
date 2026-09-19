@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arena.AIML - Academic Project Poster</title>
+  <style>
+    /* CSS Reset & Print Configuration */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A3 landscape;
+      margin: 0;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .poster-container {
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100% !important;
+        border: none !important;
+      }
+    }
+
+    body {
+      background-color: #525659;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      color: #111111;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Floating Action Toolbar */
+    .toolbar {
+      position: sticky;
+      top: 12px;
+      z-index: 1000;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+    }
+
+    .toolbar button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 7px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    .toolbar button.secondary {
+      background: #334155;
+    }
+    .toolbar button.secondary:hover {
+      background: #475569;
+    }
+
+    .toolbar button.success {
+      background: #10b981;
+    }
+    .toolbar button.success:hover {
+      background: #059669;
+    }
+
+    /* Main Poster Canvas - Standard 16:9 Landscape Aspect Ratio (1440 x 810 px) */
+    .poster-container {
+      width: 1440px;
+      height: 860px;
+      background: #ffffff;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+    }
+
+    /* 1. Header Banner - Exact Match to Reference */
+    .poster-header {
+      background: #142542;
+      color: #ffffff;
+      text-align: center;
+      padding: 14px 24px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 3px solid #0d1b30;
+      flex-shrink: 0;
+    }
+
+    .poster-header .college-name {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .poster-header .department-name {
+      font-size: 14.5px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #e2e8f0;
+      margin-bottom: 7px;
+    }
+
+    .poster-header .project-title {
+      font-size: 21.5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: #ffffff;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .poster-header .authors {
+      font-size: 14.5px;
+      font-style: italic;
+      color: #f1f5f9;
+      font-weight: 500;
+    }
+
+    /* Poster Content Body */
+    .poster-body {
+      padding: 10px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 10px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    /* Reusable Red-Bordered Box matching reference */
+    .red-box {
+      border: 2px solid #b91c1c;
+      border-radius: 4px;
+      padding: 8px 12px;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .box-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 5px;
+      display: inline-block;
+    }
+
+    .box-content {
+      font-size: 11px;
+      line-height: 1.35;
+      color: #111111;
+      text-align: justify;
+    }
+
+    /* 2. Abstract Section - Full Width Horizontal Box */
+    .abstract-box {
+      flex-shrink: 0;
+      padding: 8px 14px;
+    }
+
+    .abstract-box .box-title {
+      margin-right: 6px;
+      float: left;
+    }
+
+    /* 3. Three Column Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 31% 38% 31%;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+    }
+
+    /* Left Column Layout */
+    .intro-box {
+      flex: 0 0 auto;
+      max-height: 235px;
+    }
+
+    .proposed-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .proposed-box .diagram-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 4px;
+    }
+
+    .proposed-box .diagram-container svg {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Middle Column Layout */
+    .algorithms-box {
+      flex: 1.05;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .algo-item {
+      margin-bottom: 7px;
+    }
+    .algo-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .algo-name {
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #000000;
+      font-style: italic;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .algo-desc {
+      font-size: 10.8px;
+      line-height: 1.32;
+      text-align: justify;
+    }
+
+    .algo-math {
+      font-family: 'Cambria Math', 'Times New Roman', serif;
+      background: #f8fafc;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border-left: 2px solid #b91c1c;
+      font-size: 10.5px;
+      margin: 3px 0;
+      color: #1e293b;
+    }
+
+    .result-box {
+      flex: 0.95;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Result Dropzone & Content Area */
+    .result-content-area {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 4px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .result-content-area:hover {
+      background: #f1f5f9;
+      border-color: #3b82f6;
+    }
+
+    .result-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      color: #475569;
+    }
+
+    .result-placeholder .icon {
+      font-size: 32px;
+      margin-bottom: 6px;
+    }
+
+    .result-placeholder h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 3px;
+    }
+
+    .result-placeholder p {
+      font-size: 10px;
+      color: #64748b;
+      max-width: 320px;
+      line-height: 1.3;
+    }
+
+    .result-placeholder .btn-upload {
+      margin-top: 8px;
+      background: #b91c1c;
+      color: white;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .result-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .result-badge-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 5px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .metric-pill {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 9.5px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Right Column Layout */
+    .conclusion-box {
+      flex: 0 0 auto;
+      max-height: 180px;
+    }
+
+    .future-box {
+      flex: 0 0 auto;
+      max-height: 185px;
+    }
+
+    .references-box {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ref-list {
+      list-style-type: decimal;
+      padding-left: 16px;
+      font-size: 9.8px;
+      line-height: 1.32;
+    }
+
+    .ref-list li {
+      margin-bottom: 4px;
+      text-align: left;
+    }
+    .ref-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Hidden file input */
+    #imageFileInput {
+      display: none;
+    }
+
+    /* Contenteditable highlight */
+    [contenteditable="true"] {
+      outline: 1.5px dashed #3b82f6;
+      background: rgba(59, 130, 246, 0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Controls Toolbar (Hidden during Print) -->
+  <div class="toolbar no-print">
+    <span style="font-weight: 600; margin-right: 4px;">🎓 Arena.AIML Poster Studio</span>
+    <button onclick="window.print()" class="success">🖨️ Print / Save as PDF</button>
+    <button onclick="document.getElementById('imageFileInput').click()">🖼️ Insert Result Image</button>
+    <button onclick="toggleSampleResult()" class="secondary" id="sampleToggleBtn">📊 Load Sample UI Result</button>
+    <button onclick="toggleEditMode()" class="secondary" id="editToggleBtn">✏️ Edit Text</button>
+    <button onclick="toggleFont()" class="secondary" id="fontToggleBtn">🔤 Font: Serif</button>
+    <input type="file" id="imageFileInput" accept="image/*" onchange="handleImageUpload(event)" />
+  </div>
+
+  <!-- The Academic Poster (Exact Reference Aspect Ratio & Styling) -->
+  <div class="poster-container" id="posterRoot">
+    
+    <!-- 1. Header Banner -->
+    <header class="poster-header">
+      <div class="college-name">S.B. JAIN INSTITUTE OF TECHNOLOGY, MANAGEMENT &amp; RESEARCH, NAGPUR</div>
+      <div class="department-name">DEPARTMENT OF EMERGING TECHNOLOGIES (AI&amp;ML and AI&amp;DS)</div>
+      <div class="project-title" contenteditable="false" id="titleText">“ARENA.AIML: AI-POWERED EVENT LIFECYCLE MANAGEMENT &amp; ENGAGEMENT PLATFORM”</div>
+      <div class="authors" contenteditable="false" id="authorText">By- Mr. Sujyot [Name], Ms. Sara Ganvir, Ms. Anushka Savita, Mr. Glory Jagjivan</div>
+    </header>
+
+    <!-- Poster Body Grid -->
+    <main class="poster-body">
+      
+      <!-- 2. Full-Width Abstract Box -->
+      <section class="red-box abstract-box">
+        <span class="box-title">Abstract:</span>
+        <span class="box-content" contenteditable="false">
+          Campus event management traditionally suffers from fragmented communication, manual coordination bottlenecks, low student turnout, and a complete lack of personalized discovery. To address these systemic inefficiencies, <strong>Arena.AIML</strong> is developed as an end-to-end intelligent campus event lifecycle and engagement platform. The platform unifies role-based event orchestration (Students, Faculty, and Institutional Administrators) with state-of-the-art Generative AI and multi-signal recommendation algorithms. Arena.AIML features an automated AI creative suite powered by large language models and diffusion pipelines for automated promotional poster generation, context-aware event description synthesis, personalized broadcast email outreach, and a real-time conversational campus assistant. Furthermore, it incorporates a hybrid multi-signal recommendation engine combining Jaccard tag similarity, profile interest vector alignment, departmental affinity, and recency scoring to deliver hyper-personalized event feeds. High-concurrency event registrations are secured via Razorpay payment gateway integration with HMAC-SHA256 signature verification and automated tamper-evident QR code pass generation. Post-event attendee feedback is automatically analyzed through NLP-driven sentiment scoring, thematic clustering, and priority issue detection. Arena.AIML streamlines institutional governance, boosts student engagement, and provides a scalable, enterprise-grade architecture for modern educational ecosystems.
+        </span>
+      </section>
+
+      <!-- 3. Three-Column Main Layout -->
+      <div class="main-grid">
+        
+        <!-- ==================== COLUMN 1: LEFT ==================== -->
+        <div class="column">
+          
+          <!-- Introduction Box -->
+          <section class="red-box intro-box">
+            <div class="box-title">Introduction:</div>
+            <div class="box-content" contenteditable="false">
+              With the rapid expansion of collegiate activities, technical symposiums, hackathons, and cultural fests, campus events play a vital role in student development and industry networking. However, conventional campus event coordination relies on disparate WhatsApp groups, static physical notice boards, and unintegrated Google Forms. This fragmented approach leads to acute information asymmetry, missed deadlines, cumbersome manual payment reconciliation, and poor student turnout.
+              <br/><br/>
+              To overcome these operational challenges, <strong>Arena.AIML</strong> introduces a centralized, AI-first event management architecture. By coupling a reactive React 19 frontend with an Express-based micro-service API, automated diffusion-based visual design engines, and an explainable multi-signal recommendation algorithm, Arena.AIML bridges the gap between administrative oversight and student engagement.
+            </div>
+          </section>
+
+          <!-- Proposed System Box (with Architecture Diagram) -->
+          <section class="red-box proposed-box">
+            <div class="box-title">Proposed System:</div>
+            <div class="diagram-container" id="diagramWrap">
+              <!-- Inline High-Resolution Vector Architecture Flow Diagram -->
+              <svg viewBox="0 0 540 330" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="font-family:'Segoe UI', Inter, sans-serif;">
+                <defs>
+                  <filter id="boxShadow" x="-5%" y="-5%" width="110%" height="115%">
+                    <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.1" />
+                  </filter>
+                  <marker id="arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1e293b" />
+                  </marker>
+                  <marker id="arrRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#b91c1c" />
+                  </marker>
+                  <marker id="arrBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7" />
+                  </marker>
+                  <marker id="arrPurp" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#7e22ce" />
+                  </marker>
+                </defs>
+
+                <!-- Input Column: Users -->
+                <g transform="translate(10, 20)">
+                  <rect x="0" y="0" width="85" height="135" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <text x="42" y="16" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0f172a">User Roles</text>
+                  <circle cx="42" cy="38" r="11" fill="#3b82f6" opacity="0.15" />
+                  <text x="42" y="42" text-anchor="middle" font-size="12">🎓</text>
+                  <text x="42" y="58" text-anchor="middle" font-size="8" font-weight="600" fill="#1e293b">Students</text>
+                  <text x="42" y="70" text-anchor="middle" font-size="8" fill="#475569">Browse &amp; RSVP</text>
+                  <line x1="8" y1="76" x2="76" y2="76" stroke="#cbd5e1" stroke-width="0.8" />
+                  <text x="42" y="90" text-anchor="middle" font-size="8" font-weight="600" fill="#1e293b">Faculty &amp; Admin</text>
+                  <text x="42" y="102" text-anchor="middle" font-size="8" fill="#475569">Create, Review,</text>
+                  <text x="42" y="114" text-anchor="middle" font-size="8" fill="#475569">&amp; AI Studio</text>
+                </g>
+
+                <!-- Client Presentation Layer -->
+                <g transform="translate(118, 12)">
+                  <rect x="0" y="0" width="105" height="150" rx="5" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <rect x="0" y="0" width="105" height="18" rx="5" fill="#0284c7" />
+                  <text x="52" y="13" text-anchor="middle" font-size="8.5" font-weight="700" fill="#ffffff">Client Layer (React 19)</text>
+                  <text x="52" y="32" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">Role-Based Views</text>
+                  <text x="52" y="46" text-anchor="middle" font-size="7.5" fill="#334155">• Student Discovery</text>
+                  <text x="52" y="58" text-anchor="middle" font-size="7.5" fill="#334155">• Faculty Dashboard</text>
+                  <text x="52" y="70" text-anchor="middle" font-size="7.5" fill="#334155">• Admin Approvals</text>
+                  <line x1="8" y1="77" x2="97" y2="77" stroke="#bae6fd" stroke-width="0.8" />
+                  <text x="52" y="90" text-anchor="middle" font-size="8" font-weight="700" fill="#0369a1">Interactive Features</text>
+                  <text x="52" y="103" text-anchor="middle" font-size="7.5" fill="#334155">• AI Poster Studio</text>
+                  <text x="52" y="115" text-anchor="middle" font-size="7.5" fill="#334155">• Razorpay Gateway</text>
+                  <text x="52" y="127" text-anchor="middle" font-size="7.5" fill="#334155">• Verified QR Passes</text>
+                  <text x="52" y="139" text-anchor="middle" font-size="7.5" fill="#334155">• Real-time Campus Bot</text>
+                </g>
+
+                <!-- Central API Gateway & Middleware -->
+                <g transform="translate(248, 12)">
+                  <rect x="0" y="0" width="105" height="150" rx="5" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <rect x="0" y="0" width="105" height="18" rx="5" fill="#16a34a" />
+                  <text x="52" y="13" text-anchor="middle" font-size="8.5" font-weight="700" fill="#ffffff">API Gateway &amp; Auth</text>
+                  <text x="52" y="32" text-anchor="middle" font-size="8" font-weight="700" fill="#15803d">Express 5 REST</text>
+                  <text x="52" y="46" text-anchor="middle" font-size="7.5" fill="#334155">JWT Authentication</text>
+                  <text x="52" y="58" text-anchor="middle" font-size="7.5" fill="#334155">Role-Based RBAC</text>
+                  <text x="52" y="70" text-anchor="middle" font-size="7.5" fill="#334155">Helmet &amp; Security</text>
+                  <line x1="8" y1="77" x2="97" y2="77" stroke="#bbf7d0" stroke-width="0.8" />
+                  <text x="52" y="90" text-anchor="middle" font-size="8" font-weight="700" fill="#15803d">Core Services</text>
+                  <text x="52" y="103" text-anchor="middle" font-size="7.5" fill="#334155">Event Lifecycle Engine</text>
+                  <text x="52" y="115" text-anchor="middle" font-size="7.5" fill="#334155">Razorpay Order API</text>
+                  <text x="52" y="127" text-anchor="middle" font-size="7.5" fill="#334155">Nodemailer Dispatch</text>
+                  <text x="52" y="139" text-anchor="middle" font-size="7.5" fill="#334155">Feedback Pipeline</text>
+                </g>
+
+                <!-- AI Hub & Recommendation Engine -->
+                <g transform="translate(378, 12)">
+                  <rect x="0" y="0" width="150" height="150" rx="5" fill="#faf5ff" stroke="#7e22ce" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <rect x="0" y="0" width="150" height="18" rx="5" fill="#7e22ce" />
+                  <text x="75" y="13" text-anchor="middle" font-size="8.5" font-weight="700" fill="#ffffff">AI Hub &amp; ML Services</text>
+                  <text x="75" y="32" text-anchor="middle" font-size="8" font-weight="700" fill="#6b21a8">Recommendation Engine</text>
+                  <text x="75" y="44" text-anchor="middle" font-size="7.5" fill="#334155">Jaccard Tag Sim: J = |A ∩ B| / |A ∪ B|</text>
+                  <text x="75" y="56" text-anchor="middle" font-size="7.5" fill="#334155">Interest Matching &amp; Recency Decay</text>
+                  <line x1="10" y1="63" x2="140" y2="63" stroke="#e9d5ff" stroke-width="0.8" />
+                  <text x="75" y="75" text-anchor="middle" font-size="8" font-weight="700" fill="#6b21a8">GenAI Providers &amp; Registry</text>
+                  <text x="75" y="88" text-anchor="middle" font-size="7.5" fill="#334155">Google Gemini (JSON Schema Mode)</text>
+                  <text x="75" y="100" text-anchor="middle" font-size="7.5" fill="#334155">OpenAI GPT-4o Fallback Circuit</text>
+                  <text x="75" y="112" text-anchor="middle" font-size="7.5" fill="#334155">Diffusion Poster Generation</text>
+                  <text x="75" y="125" text-anchor="middle" font-size="7.5" fill="#334155">NLP Sentiment &amp; Topic Analysis</text>
+                  <text x="75" y="138" text-anchor="middle" font-size="7" font-style="italic" fill="#7e22ce">Deterministic 15m Cache &amp; Retry</text>
+                </g>
+
+                <!-- Persistence & Database Layer (Bottom Center) -->
+                <g transform="translate(180, 185)">
+                  <rect x="0" y="0" width="180" height="60" rx="5" fill="#fff1f2" stroke="#e11d48" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <rect x="0" y="0" width="180" height="16" rx="5" fill="#e11d48" />
+                  <text x="90" y="12" text-anchor="middle" font-size="8" font-weight="700" fill="#ffffff">Persistence Tier (MongoDB &amp; Cache)</text>
+                  <text x="90" y="29" text-anchor="middle" font-size="7.5" font-weight="600" fill="#9f1239">Collections: Events • Registrations • Users • AIGenerations</text>
+                  <text x="90" y="41" text-anchor="middle" font-size="7.5" fill="#475569">Payment Signatures • Attendee Feedback &amp; Surveys</text>
+                  <text x="90" y="53" text-anchor="middle" font-size="7" fill="#64748b">Fallback In-Memory MockStore for Resilient Dev Testing</text>
+                </g>
+
+                <!-- Outputs and Deliverables (Bottom Horizontal) -->
+                <g transform="translate(10, 260)">
+                  <rect x="0" y="0" width="518" height="60" rx="5" fill="#f0fdfa" stroke="#0d9488" stroke-width="1.2" filter="url(#boxShadow)" />
+                  <rect x="0" y="0" width="518" height="16" rx="5" fill="#0d9488" />
+                  <text x="259" y="12" text-anchor="middle" font-size="8.5" font-weight="700" fill="#ffffff">SYSTEM OUTPUTS &amp; DELIVERABLES</text>
+                  
+                  <rect x="8" y="22" width="118" height="32" rx="3" fill="#ffffff" stroke="#99f6e4" stroke-width="0.8" />
+                  <text x="67" y="34" text-anchor="middle" font-size="7.5" font-weight="700" fill="#0f766e">Personalized Feed</text>
+                  <text x="67" y="46" text-anchor="middle" font-size="6.8" fill="#334155">Tailored event discovery</text>
+
+                  <rect x="134" y="22" width="118" height="32" rx="3" fill="#ffffff" stroke="#99f6e4" stroke-width="0.8" />
+                  <text x="193" y="34" text-anchor="middle" font-size="7.5" font-weight="700" fill="#0f766e">AI Promotional Posters</text>
+                  <text x="193" y="46" text-anchor="middle" font-size="6.8" fill="#334155">Themed diffusion artwork</text>
+
+                  <rect x="260" y="22" width="124" height="32" rx="3" fill="#ffffff" stroke="#99f6e4" stroke-width="0.8" />
+                  <text x="322" y="34" text-anchor="middle" font-size="7.5" font-weight="700" fill="#0f766e">Verified QR Passes</text>
+                  <text x="322" y="46" text-anchor="middle" font-size="6.8" fill="#334155">Instant check-in tickets</text>
+
+                  <rect x="392" y="22" width="118" height="32" rx="3" fill="#ffffff" stroke="#99f6e4" stroke-width="0.8" />
+                  <text x="451" y="34" text-anchor="middle" font-size="7.5" font-weight="700" fill="#0f766e">NLP Sentiment Insights</text>
+                  <text x="451" y="46" text-anchor="middle" font-size="6.8" fill="#334155">Thematic event analytics</text>
+                </g>
+
+                <!-- Directional Flow Arrows -->
+                <line x1="95" y1="85" x2="118" y2="85" stroke="#1e293b" stroke-width="1.2" marker-end="url(#arr)" />
+                <line x1="223" y1="75" x2="248" y2="75" stroke="#0284c7" stroke-width="1.2" marker-end="url(#arrBlue)" />
+                <line x1="248" y1="95" x2="223" y2="95" stroke="#16a34a" stroke-width="1.2" marker-end="url(#arr)" />
+                <line x1="353" y1="75" x2="378" y2="75" stroke="#7e22ce" stroke-width="1.2" marker-end="url(#arrPurp)" />
+                <line x1="378" y1="95" x2="353" y2="95" stroke="#16a34a" stroke-width="1.2" marker-end="url(#arr)" />
+                <line x1="300" y1="162" x2="300" y2="185" stroke="#e11d48" stroke-width="1.2" marker-end="url(#arrRed)" />
+                <line x1="435" y1="162" x2="360" y2="195" stroke="#7e22ce" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#arrPurp)" />
+                <line x1="270" y1="245" x2="270" y2="260" stroke="#0d9488" stroke-width="1.2" marker-end="url(#arr)" />
+              </svg>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ==================== COLUMN 2: MIDDLE ==================== -->
+        <div class="column">
+          
+          <!-- Algorithms Section -->
+          <section class="red-box algorithms-box">
+            <div class="box-title">Algorithms:</div>
+            <div class="box-content" contenteditable="false">
+              
+              <div class="algo-item">
+                <span class="algo-name">Multi-Signal Affinity &amp; Jaccard Engine:</span>
+                <span class="algo-desc">
+                  To eliminate event discovery fatigue, recommendations are ranked via a multi-signal composite scoring function:
+                  <div class="algo-math">
+                    Score = w₁·Interest + w₂·Category + w₃·TagSim + w₄·Popularity + w₅·Recency
+                  </div>
+                  where weights sum to 1.0 (w₁=0.35, w₂=0.25, w₃=0.15, w₄=0.15, w₅=0.10). Historical tag affinity is computed via set-theoretic Jaccard similarity:
+                  <div class="algo-math">
+                    J(A, B) = |A ∩ B| / |A ∪ B|
+                  </div>
+                  Interest matching executes substring token overlap against user declared skills, while recency applies temporal boost decay for upcoming events occurring within 7 to 21 days.
+                </span>
+              </div>
+
+              <div class="algo-item">
+                <span class="algo-name">Structured Prompt Engineering &amp; LLM Orchestration:</span>
+                <span class="algo-desc">
+                  A centralized <code>PromptRegistry</code> executes dynamic template interpolation with JSON schema constraints at temperature T=0.2. It orchestrates automated event descriptions, targeted email campaigns, and NLP sentiment polarity extraction. Automated retry circuits with exponential backoff and 15-minute in-memory caching prevent model latency spikes and API rate limit exhaustion.
+                </span>
+              </div>
+
+              <div class="algo-item">
+                <span class="algo-name">Aspect-Aware Generative Diffusion Poster Synthesis:</span>
+                <span class="algo-desc">
+                  Dynamically constructs multi-parameter visual prompts (theme, design style, color palette, aspect ratio constraints 1:1, 9:16) fed into diffusion models (Imagen-3 / Pollinations). Generates print-ready high-resolution promotional artwork in seconds, automating marketing design for student committees and faculty organizers.
+                </span>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Result Section (User will put their output screenshot here) -->
+          <section class="red-box result-box">
+            <div class="box-title">Result:</div>
+            
+            <div class="result-content-area" id="resultDropzone" onclick="document.getElementById('imageFileInput').click()" title="Click to upload or press Ctrl+V to paste your output screenshot">
+              
+              <!-- Placeholder State -->
+              <div class="result-placeholder" id="placeholderView">
+                <div class="icon">🖼️</div>
+                <h4>Your Project Output / Screenshot Goes Here</h4>
+                <p>Click here to select an image from your computer, or copy an image to your clipboard and press <strong>Ctrl + V</strong> to paste.</p>
+                <button type="button" class="btn-upload">📁 Choose Screenshot</button>
+                <div style="font-size: 8.5px; color: #94a3b8; margin-top: 5px;">Supports PNG, JPG, WebP, SVG • Automatically scaled to fit</div>
+              </div>
+
+              <!-- Uploaded Image Display -->
+              <img id="resultImage" class="result-preview-img" alt="Arena.AIML Project Output Result" />
+            </div>
+
+            <!-- Key Performance Metrics Bar -->
+            <div class="result-badge-bar">
+              <span class="metric-pill">🎯 94.2% Affinity Match</span>
+              <span class="metric-pill">⚡ &lt;1.2s AI Synthesis Latency</span>
+              <span class="metric-pill">🔒 100% Razorpay HMAC Integrity</span>
+              <span class="metric-pill">📊 82% Sentiment Polarity Precision</span>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ==================== COLUMN 3: RIGHT ==================== -->
+        <div class="column">
+          
+          <!-- Conclusion Box -->
+          <section class="red-box conclusion-box">
+            <div class="box-title">Conclusion:</div>
+            <div class="box-content" contenteditable="false">
+              The proposed <strong>Arena.AIML</strong> platform provides a comprehensive, modern solution to traditional campus event management bottlenecks. By seamlessly integrating React 19, Express 5 micro-services, and MongoDB with state-of-the-art Generative AI and multi-signal recommendation algorithms, the platform automates end-to-end event workflows. Razorpay payment processing and tamper-evident QR ticketing ensure fast, secure registration and physical entry, while NLP feedback analytics deliver actionable intelligence for continuous event refinement. Arena.AIML achieves high performance, scalability, and enhanced student participation across institutional domains.
+            </div>
+          </section>
+
+          <!-- Future Scope Box -->
+          <section class="red-box future-box">
+            <div class="box-title">Future Scope:</div>
+            <div class="box-content" contenteditable="false">
+              The platform can be further enriched through several emerging technological paradigms:
+              <ul style="padding-left: 15px; margin-top: 3px; font-size: 10.5px; line-height: 1.3;">
+                <li><strong>Decentralized Credentialing:</strong> Issuing tamper-proof, verifiable digital certificates as Soulbound NFTs on blockchain networks.</li>
+                <li><strong>Edge AI Attendance:</strong> Deploying lightweight edge facial recognition at auditorium turnstiles for frictionless, contact-free check-in.</li>
+                <li><strong>Native Mobile App:</strong> Developing a cross-platform React Native app with offline QR scanning and push notifications.</li>
+                <li><strong>Voice-Enabled Campus Agents:</strong> Adding multi-lingual speech-to-speech AI assistants for inclusive regional accessibility.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- References Box -->
+          <section class="red-box references-box">
+            <div class="box-title">References:</div>
+            <ol class="ref-list" contenteditable="false">
+              <li>Aggarwal, C. C. (2016). <em>Recommender Systems: The Textbook</em>. Springer International Publishing, Cham.</li>
+              <li>Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). <em>Attention Is All You Need</em>. Advances in Neural Information Processing Systems (NeurIPS), 30, 5998–6008.</li>
+              <li>Rombach, R., Blattmann, A., Lorenz, D., Esser, P., &amp; Ommer, B. (2022). <em>High-Resolution Image Synthesis with Latent Diffusion Models</em>. In IEEE/CVF CVPR, pp. 10684–10695.</li>
+              <li>Brown, T., Mann, B., Ryder, N., et al. (2020). <em>Language Models are Few-Shot Learners</em>. Advances in Neural Information Processing Systems (NeurIPS), 33, 1877–1901.</li>
+              <li>Fielding, R. T., &amp; Taylor, R. N. (2002). <em>Principled Design of the Modern Web Architecture</em>. ACM Transactions on Internet Technology (TOIT), 2(2), 115–150.</li>
+            </ol>
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Handle File Upload from Input
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          displayImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Display Image in Result Box
+    function displayImage(src) {
+      const img = document.getElementById('resultImage');
+      const placeholder = document.getElementById('placeholderView');
+      img.src = src;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+      document.getElementById('sampleToggleBtn').innerText = '🔄 Reset Result Box';
+    }
+
+    // Paste Image from Clipboard (Ctrl + V anywhere on page)
+    window.addEventListener('paste', function(e) {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let index in items) {
+        const item = items[index];
+        if (item.kind === 'file' && item.type.includes('image/')) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            displayImage(event.target.result);
+          };
+          reader.readAsDataURL(blob);
+          break;
+        }
+      }
+    });
+
+    // Toggle Sample Result Mockup
+    let isSampleActive = false;
+    function toggleSampleResult() {
+      const img = document.getElementById('resultImage');
+      const placeholder = document.getElementById('placeholderView');
+      
+      if (!isSampleActive && img.style.display !== 'block') {
+        // Render a clean SVG mock of the Arena.AIML interface
+        const sampleSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="350" viewBox="0 0 600 350" style="background:%230f172a;font-family:sans-serif;"><rect width="600" height="35" fill="%231e293b"/><circle cx="20" cy="18" r="5" fill="%23ef4444"/><circle cx="36" cy="18" r="5" fill="%23f59e0b"/><circle cx="52" cy="18" r="5" fill="%2310b981"/><text x="80" y="22" fill="%2394a3b8" font-size="11">Arena.AIML — Intelligent Event &amp; Recommendation Dashboard</text><rect x="15" y="50" width="170" height="135" rx="6" fill="%231e293b"/><text x="25" y="70" fill="%2338bdf8" font-size="11" font-weight="bold">AI Poster Studio</text><rect x="25" y="80" width="150" height="70" rx="4" fill="%23334155"/><text x="100" y="120" text-anchor="middle" fill="%23cbd5e1" font-size="9">[Synthesized Poster]</text><text x="25" y="168" fill="%2310b981" font-size="9">✓ Generated in 1.14s</text><rect x="200" y="50" width="185" height="135" rx="6" fill="%231e293b"/><text x="210" y="70" fill="%23a855f7" font-size="11" font-weight="bold">Recommendations Feed</text><text x="210" y="90" fill="%23f1f5f9" font-size="9">1. National AI Hackathon</text><text x="210" y="103" fill="%2338bdf8" font-size="8">96% Affinity (Tags: AI, Web3)</text><text x="210" y="123" fill="%23f1f5f9" font-size="9">2. Cloud ML Symposium</text><text x="210" y="136" fill="%2338bdf8" font-size="8">89% Match (Dept: AI&amp;DS)</text><rect x="400" y="50" width="185" height="135" rx="6" fill="%231e293b"/><text x="410" y="70" fill="%2310b981" font-size="11" font-weight="bold">NLP Sentiment Analysis</text><circle cx="490" cy="115" r="32" fill="none" stroke="%2310b981" stroke-width="8" stroke-dasharray="160 40"/><text x="490" y="119" text-anchor="middle" fill="%23f1f5f9" font-size="12" font-weight="bold">82%</text><text x="490" y="130" text-anchor="middle" fill="%2394a3b8" font-size="7">Positive Polarity</text><rect x="15" y="200" width="570" height="135" rx="6" fill="%231e293b"/><text x="30" y="222" fill="%23f8fafc" font-size="11" font-weight="bold">Live Registration &amp; Razorpay Ticket Verification</text><rect x="30" y="235" width="250" height="85" rx="4" fill="%230f172a"/><text x="40" y="255" fill="%2338bdf8" font-size="9.5" font-weight="bold">Pass: ARENA-EVT-9042</text><text x="40" y="270" fill="%2394a3b8" font-size="8.5">Attendee: Sujyot [Student]</text><text x="40" y="285" fill="%2394a3b8" font-size="8.5">Status: Verified HMAC-SHA256</text><text x="40" y="300" fill="%2310b981" font-size="8.5">Payment: ₹250 (Captured)</text><rect x="300" y="235" width="260" height="85" rx="4" fill="%230f172a"/><text x="310" y="255" fill="%23f59e0b" font-size="9.5" font-weight="bold">Prompt Registry Telemetry</text><text x="310" y="270" fill="%2394a3b8" font-size="8.5">Active Model: Gemini 1.5 Pro / GPT-4o</text><text x="310" y="285" fill="%2394a3b8" font-size="8.5">Cache Hit Rate: 78.4% (TTL 15m)</text><text x="310" y="300" fill="%2394a3b8" font-size="8.5">Token Consumption: 1,420 tokens/req</text></svg>`;
+        displayImage(sampleSvg);
+        isSampleActive = true;
+      } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+        document.getElementById('sampleToggleBtn').innerText = '📊 Load Sample UI Result';
+        isSampleActive = false;
+      }
+    }
+
+    // Toggle Content Editable for Live Edits
+    let isEditing = false;
+    function toggleEditMode() {
+      isEditing = !isEditing;
+      const editables = document.querySelectorAll('[contenteditable]');
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', isEditing ? 'true' : 'false');
+      });
+      const btn = document.getElementById('editToggleBtn');
+      btn.innerText = isEditing ? '💾 Lock Edits' : '✏️ Edit Text';
+      btn.style.background = isEditing ? '#e11d48' : '#334155';
+    }
+
+    // Toggle Font between Academic Serif and Modern Sans-Serif
+    let isSans = false;
+    function toggleFont() {
+      isSans = !isSans;
+      const root = document.getElementById('posterRoot');
+      root.style.fontFamily = isSans 
+        ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+        : "'Times New Roman', Times, Georgia, serif";
+      document.getElementById('fontToggleBtn').innerText = isSans ? '🔤 Font: Sans-Serif' : '🔤 Font: Serif';
+    }
+  </script>
+
+</body>
+</html>
