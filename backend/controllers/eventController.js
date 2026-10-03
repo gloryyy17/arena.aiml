@@ -137,12 +137,12 @@ const updateEvent = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && event.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to edit this event' });
     }
 
     // If event was already approved and faculty edits it, send it back for re-approval
-    if (event.status === 'approved') {
+    if (event.status === 'approved' && req.user.role !== 'admin') {
       req.body.status = 'pending';
       req.body.approvedBy = null;
     }
@@ -160,7 +160,7 @@ const updateEvent = async (req, res, next) => {
 
 // @desc    Delete event
 // @route   DELETE /api/events/:id
-// @access  Private (Faculty - own events only)
+// @access  Private (Faculty - own events only, or Admin)
 const deleteEvent = async (req, res, next) => {
   try {
     if (!isDbConnected()) {
@@ -174,7 +174,7 @@ const deleteEvent = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && event.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this event' });
     }
 
@@ -188,7 +188,7 @@ const deleteEvent = async (req, res, next) => {
 
 // @desc    Submit event for admin approval
 // @route   PATCH /api/events/:id/submit
-// @access  Private (Faculty - own events only)
+// @access  Private (Faculty - own events only, or Admin)
 const submitEvent = async (req, res, next) => {
   try {
     if (!isDbConnected()) {
@@ -205,7 +205,7 @@ const submitEvent = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+    if (req.user.role !== 'admin' && event.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 

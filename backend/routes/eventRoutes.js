@@ -17,17 +17,17 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 // Public routes
 router.get('/', getEvents);
 
-// Specific routes BEFORE /:id to avoid route collision
-router.get('/my-events', protect, authorize('faculty'), getMyEvents);
+// Faculty & Admin routes
+router.get('/my-events', protect, authorize('faculty', 'admin'), getMyEvents);
 router.get('/admin/all', protect, authorize('admin'), getAllEventsForAdmin);
 
 router.get('/:id', getEventById);
 
-// Faculty routes
-router.post('/', protect, authorize('faculty'), createEvent);
-router.put('/:id', protect, authorize('faculty'), updateEvent);
-router.delete('/:id', protect, authorize('faculty'), deleteEvent);
-router.patch('/:id/submit', protect, authorize('faculty'), submitEvent);
+// Creation and management routes
+router.post('/', protect, authorize('faculty', 'admin'), createEvent);
+router.put('/:id', protect, authorize('faculty', 'admin'), updateEvent);
+router.delete('/:id', protect, authorize('faculty', 'admin'), deleteEvent);
+router.patch('/:id/submit', protect, authorize('faculty', 'admin'), submitEvent);
 
 // Admin routes
 router.patch('/:id/approve', protect, authorize('admin'), approveEvent);
