@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
 import {
   Palette,
   Sparkles,
@@ -7,22 +6,16 @@ import {
   Share2,
   RefreshCw,
   Check,
-  AlertCircle,
   Calendar,
-  Clock,
   MapPin,
   UserCheck,
-  Users,
-  QrCode,
-  Link2,
   Printer,
   Layers,
   Sliders,
-  Sparkle,
   Zap,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
-import api, { getErrorMessage } from '../../api/axios';
+import api from '../../api/axios';
 
 const navItems = [
   { label: '← AI Hub', to: '/ai-hub' },
@@ -201,7 +194,7 @@ const PosterGenerator = () => {
     if (!node) return;
 
     const width = 640;
-    const height = 905; // Standard 1:1.414 portrait poster
+    const height = 905;
 
     const svgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -220,7 +213,7 @@ const PosterGenerator = () => {
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = width * 2; // 2x high-res
+      canvas.width = width * 2;
       canvas.height = height * 2;
       const ctx = canvas.getContext('2d');
       ctx.scale(2, 2);
@@ -243,7 +236,11 @@ const PosterGenerator = () => {
   const handleShare = () => {
     navigator.clipboard.writeText(form.registrationLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setStatusMsg('Registration link copied to clipboard!');
+    setTimeout(() => {
+      setCopied(false);
+      setStatusMsg('');
+    }, 3000);
   };
 
   const theme = categoryThemes[form.category] || categoryThemes.technical;
@@ -263,6 +260,14 @@ const PosterGenerator = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleShare}
+            className="px-3.5 py-2 rounded-full border border-border-light dark:border-border-dark text-xs font-mono opacity-80 hover:opacity-100 transition-opacity flex items-center gap-1.5"
+            title="Copy Registration Link"
+          >
+            {copied ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
+            <span>{copied ? 'Copied' : 'Share'}</span>
+          </button>
           <button
             onClick={handleDownload}
             className="px-4 py-2 rounded-full bg-accent text-white text-xs font-mono font-medium hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-md"

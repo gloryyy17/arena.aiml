@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
 import {
   Award,
   Sparkles,
@@ -12,9 +10,6 @@ import {
   Sliders,
   CheckCircle2,
   AlertCircle,
-  FileText,
-  Users,
-  Search,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api, { getErrorMessage } from '../../api/axios';
@@ -186,14 +181,8 @@ const CertificateGenerator = () => {
     const certElement = certificateRef.current;
     if (!certElement) return;
 
-    // Create an SVG-based raster image using foreignObject
     const width = 1120;
-    const height = 792; // Standard A4 landscape aspect ratio ~1.414
-
-    // Clone element to string
-    const clone = certElement.cloneNode(true);
-    clone.style.width = `${width}px`;
-    clone.style.height = `${height}px`;
+    const height = 792;
 
     const svgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -212,7 +201,7 @@ const CertificateGenerator = () => {
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = width * 2; // 2x high resolution
+      canvas.width = width * 2;
       canvas.height = height * 2;
       const ctx = canvas.getContext('2d');
       ctx.scale(2, 2);
@@ -308,9 +297,12 @@ const CertificateGenerator = () => {
 
             {/* Event Selection Dropdown */}
             <div>
-              <label className="block text-xs font-mono uppercase tracking-wider opacity-60 mb-1.5">
-                Load from My Events
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-mono uppercase tracking-wider opacity-60">
+                  Load from My Events
+                </label>
+                {loadingEvents && <span className="text-[10px] font-mono text-accent">Loading events...</span>}
+              </div>
               <select
                 value={selectedEventId}
                 onChange={handleEventSelect}
