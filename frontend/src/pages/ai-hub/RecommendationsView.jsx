@@ -1,16 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Compass,
   Sparkles,
   Calendar,
   MapPin,
-  Tag,
   CheckCircle2,
   RefreshCw,
   Zap,
-  ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
@@ -32,11 +29,7 @@ const RecommendationsView = () => {
   const [registeringId, setRegisteringId] = useState(null);
   const [regMessage, setRegMessage] = useState('');
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, []);
-
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     setLoading(true);
     setRegMessage('');
     try {
@@ -47,13 +40,17 @@ const RecommendationsView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
   const handleRegister = async (eventId) => {
     setRegisteringId(eventId);
     setRegMessage('');
     try {
-      const res = await api.post(`/registrations/${eventId}`);
+      await api.post(`/registrations/${eventId}`);
       setRegMessage(`Successfully registered for event!`);
       fetchRecommendations();
     } catch (err) {

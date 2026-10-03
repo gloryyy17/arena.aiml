@@ -2,6 +2,8 @@ const Event = require('../../models/Event');
 const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const aiService = require('./AIService');
+const { isDbConnected } = require('../../config/db');
+const mockStore = require('../../config/mockStore');
 
 /**
  * Content-Based & Multi-Signal Recommendation Engine
@@ -57,38 +59,50 @@ class RecommendationService {
    */
   async getRecommendationsForUser(userId, options = {}) {
     const limit = options.limit || 6;
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error(`User with ID ${userId} not found.`);
+    let user;
+    let userRegistrations = [];
+    let availableEvents = [];
+
+    if (!isDbConnected()) {
+      user = mockStore.findUserById(userId) || { _id: userId, interests: ['AI', 'Development'], department: 'AI & Data Science' };
+      userRegistrations = mockStore.getMyRegistrations(userId);
+      const registeredEventIds = new Set(userRegistrations.map((r) => r.event?._id?.toString()).filter(Boolean));
+      availableEvents = mockStore.getEvents();
+      if (options.excludeRegistered !== false && registeredEventIds.size > 0) {
+        availableEvents = availableEvents.filter((e) => !registeredEventIds.has(e._id?.toString()));
+      }
+    } else {
+      user = await User.findById(userId);
+      if (!user) {
+        throw new Error(`User with ID ${userId} not found.`);
+      }
+
+      userRegistrations = await Registration.find({
+        student: userId,
+        registrationStatus: { $ne: 'cancelled' },
+      }).populate('event');
+
+      const registeredEventIds = new Set(userRegistrations.map((r) => r.event?._id?.toString()).filter(Boolean));
+
+      const query = {
+        status: 'approved',
+        isPublished: true,
+        startDate: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      };
+
+      if (options.excludeRegistered !== false && registeredEventIds.size > 0) {
+        query._id = { $nin: Array.from(registeredEventIds) };
+      }
+
+      availableEvents = await Event.find(query).populate('createdBy', 'name department');
     }
-
-    // 1. Fetch user's registered events to build historical preferences
-    const userRegistrations = await Registration.find({
-      student: userId,
-      registrationStatus: { $ne: 'cancelled' },
-    }).populate('event');
-
-    const registeredEventIds = new Set(userRegistrations.map((r) => r.event?._id?.toString()).filter(Boolean));
-
-    const pastCategories = userRegistrations.map((r) => r.event?.category).filter(Boolean);
-    const pastTags = userRegistrations.flatMap((r) => r.event?.tags || []);
-
-    // 2. Fetch all upcoming approved & published events
-    const query = {
-      status: 'approved',
-      isPublished: true,
-      startDate: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // from today onwards
-    };
-
-    if (options.excludeRegistered !== false && registeredEventIds.size > 0) {
-      query._id = { $nin: Array.from(registeredEventIds) };
-    }
-
-    const availableEvents = await Event.find(query).populate('createdBy', 'name department');
 
     if (!availableEvents.length) {
       return [];
     }
+
+    const pastCategories = userRegistrations.map((r) => r.event?.category).filter(Boolean);
+    const pastTags = userRegistrations.flatMap((r) => r.event?.tags || []);
 
     // Compute max participant popularity reference for normalization
     const maxCapacity = Math.max(...availableEvents.map((e) => e.maxParticipants || 100), 100);

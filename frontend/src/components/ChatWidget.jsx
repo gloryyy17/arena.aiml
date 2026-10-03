@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send, Sparkles, Bot, User as UserIcon, Loader2, ArrowRight } from 'lucide-react';
+import { X, Send, Sparkles, Bot, User as UserIcon, Loader2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -60,7 +60,7 @@ const ChatWidget = () => {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {

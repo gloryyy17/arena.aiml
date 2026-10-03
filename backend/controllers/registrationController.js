@@ -1,7 +1,9 @@
 const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const Payment = require('../models/Payment');
-const { createRazorpayOrder, verifyPaymentSignature } = require('../services/paymentService');
+const paymentService = require('../services/paymentService');
+const { isDbConnected } = require('../config/db');
+const mockStore = require('../config/mockStore');
 
 // @desc    Register for an event
 // @route   POST /api/registrations/:eventId
@@ -10,6 +12,15 @@ const registerForEvent = async (req, res, next) => {
   try {
     const { eventId } = req.params;
     const studentId = req.user._id;
+
+    // In-Memory Fallback if MongoDB is not connected
+    if (!isDbConnected()) {
+      const result = mockStore.registerStudent(studentId, eventId);
+      if (result.error) {
+        return res.status(result.status || 400).json({ success: false, message: result.error });
+      }
+      return res.status(201).json({ success: true, registration: result.registration });
+    }
 
     const event = await Event.findById(eventId);
     if (!event) {
@@ -47,7 +58,7 @@ const registerForEvent = async (req, res, next) => {
     }
 
     // Free event — no payment step needed
-    if (event.fee === 0) {
+    if (!event.fee || event.fee === 0) {
       const registration = await Registration.create({
         student: studentId,
         event: eventId,
@@ -57,7 +68,7 @@ const registerForEvent = async (req, res, next) => {
       return res.status(201).json({ success: true, registration, requiresPayment: false });
     }
 
-    // Paid event — create registration + Razorpay order
+    // Paid event — create registration + payment order
     const registration = await Registration.create({
       student: studentId,
       event: eventId,
@@ -65,14 +76,24 @@ const registerForEvent = async (req, res, next) => {
       paymentStatus: 'pending',
     });
 
-    const order = await createRazorpayOrder(event.fee, registration._id.toString());
+    const receiptId = `rcpt_${String(studentId).slice(-6)}_${Date.now()}`.slice(0, 40);
+    const order = await paymentService.createOrder({
+      amount: event.fee,
+      receipt: receiptId,
+      notes: {
+        studentId: String(studentId),
+        eventId: String(eventId),
+        registrationId: String(registration._id),
+      },
+    });
 
     const payment = await Payment.create({
       student: studentId,
       event: eventId,
       registration: registration._id,
       amount: event.fee,
-      razorpayOrderId: order.id,
+      currency: order.currency || 'INR',
+      razorpayOrderId: order.orderId || order.id,
       status: 'created',
     });
 
@@ -83,7 +104,12 @@ const registerForEvent = async (req, res, next) => {
       success: true,
       registration,
       requiresPayment: true,
-      order: { id: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID },
+      order: {
+        id: order.orderId || order.id,
+        amount: order.amount,
+        currency: order.currency || 'INR',
+        keyId: paymentService.getPublicKey(),
+      },
     });
   } catch (error) {
     next(error);
@@ -95,27 +121,63 @@ const registerForEvent = async (req, res, next) => {
 // @access  Private (Student)
 const verifyPayment = async (req, res, next) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const orderId = req.body.razorpay_order_id || req.body.razorpayOrderId;
+    const paymentId = req.body.razorpay_payment_id || req.body.razorpayPaymentId;
+    const signature = req.body.razorpay_signature || req.body.razorpaySignature;
+    const eventId = req.body.eventId;
+    const studentId = req.user._id;
 
-    const isValid = verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'razorpayOrderId is required' });
+    }
 
-    if (!isValid) {
-      await Payment.findOneAndUpdate(
-        { razorpayOrderId: razorpay_order_id },
-        { status: 'failed', failureReason: 'Signature verification failed' }
-      );
-      return res.status(400).json({ success: false, message: 'Payment verification failed' });
+    const verification = paymentService.verifySignature({
+      orderId,
+      paymentId,
+      signature,
+    });
+
+    if (!verification.verified) {
+      if (isDbConnected()) {
+        await Payment.findOneAndUpdate(
+          { razorpayOrderId: orderId },
+          { status: 'failed', failureReason: 'Signature verification failed' }
+        );
+      }
+      return res.status(400).json({
+        success: false,
+        message: verification.message || 'Payment verification failed',
+      });
+    }
+
+    if (!isDbConnected()) {
+      const result = mockStore.verifyPayment(studentId, eventId, {
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId || `pay_mock_${Date.now()}`,
+        razorpaySignature: signature || `sig_mock_${Date.now()}`,
+      });
+      if (result.error) {
+        return res.status(result.status || 400).json({ success: false, message: result.error });
+      }
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified successfully',
+        payment: result.payment,
+        registration: result.registration,
+      });
     }
 
     const payment = await Payment.findOneAndUpdate(
-      { razorpayOrderId: razorpay_order_id },
-      { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, status: 'paid' },
+      { razorpayOrderId: orderId },
+      { razorpayPaymentId: paymentId, razorpaySignature: signature, status: 'paid' },
       { new: true }
     );
 
-    await Registration.findByIdAndUpdate(payment.registration, { paymentStatus: 'paid' });
+    if (payment) {
+      await Registration.findByIdAndUpdate(payment.registration, { paymentStatus: 'paid', registrationStatus: 'confirmed' });
+    }
 
-    res.status(200).json({ success: true, message: 'Payment verified successfully' });
+    res.status(200).json({ success: true, message: 'Payment verified successfully', payment });
   } catch (error) {
     next(error);
   }
@@ -126,6 +188,11 @@ const verifyPayment = async (req, res, next) => {
 // @access  Private (Student)
 const getMyRegistrations = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const registrations = mockStore.getMyRegistrations(req.user._id);
+      return res.status(200).json({ success: true, count: registrations.length, registrations });
+    }
+
     const registrations = await Registration.find({ student: req.user._id })
       .populate({
         path: 'event',
@@ -141,18 +208,34 @@ const getMyRegistrations = async (req, res, next) => {
 
 // @desc    Get all registrations for an event (organizer view)
 // @route   GET /api/registrations/event/:eventId
-// @access  Private (event creator)
+// @access  Private (event creator / admin)
 const getEventRegistrations = async (req, res, next) => {
   try {
-    const event = await Event.findById(req.params.eventId);
+    const { eventId } = req.params;
+
+    if (!isDbConnected()) {
+      const event = mockStore.getEventById(eventId);
+      if (!event) {
+        return res.status(404).json({ success: false, message: 'Event not found' });
+      }
+      const allRegs = mockStore.getMyRegistrations ? Array.from(mockStore.registrations.values()) : [];
+      const eventRegs = allRegs.filter((r) => {
+        const rEventId = r.event?._id || r.event;
+        return String(rEventId) === String(eventId);
+      });
+      return res.status(200).json({ success: true, count: eventRegs.length, registrations: eventRegs });
+    }
+
+    const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
-    if (event.createdBy.toString() !== req.user._id.toString()) {
+
+    if (req.user.role !== 'admin' && event.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const registrations = await Registration.find({ event: req.params.eventId })
+    const registrations = await Registration.find({ event: eventId })
       .populate('student', 'name email department studentId')
       .sort({ createdAt: -1 });
 
@@ -167,6 +250,14 @@ const getEventRegistrations = async (req, res, next) => {
 // @access  Private (Student)
 const cancelRegistration = async (req, res, next) => {
   try {
+    if (!isDbConnected()) {
+      const result = mockStore.cancelRegistration(req.params.id, req.user._id);
+      if (result.error) {
+        return res.status(result.status || 400).json({ success: false, message: result.error });
+      }
+      return res.status(200).json({ success: true, message: 'Registration cancelled', registration: result.registration });
+    }
+
     const registration = await Registration.findOne({ _id: req.params.id, student: req.user._id });
     if (!registration) {
       return res.status(404).json({ success: false, message: 'Registration not found' });

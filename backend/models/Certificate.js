@@ -3,20 +3,46 @@ const crypto = require('crypto');
 
 const certificateSchema = new mongoose.Schema(
   {
+    participantName: {
+      type: String,
+      required: [true, 'Participant name is required'],
+      trim: true,
+    },
+    eventName: {
+      type: String,
+      required: [true, 'Event name is required'],
+      trim: true,
+    },
+    certificateType: {
+      type: String,
+      default: 'Participation', // 'Participation', 'Excellence', 'Appreciation', 'Winner'
+    },
+    citation: {
+      type: String,
+      default: '',
+    },
+    organizerName: {
+      type: String,
+      default: 'Department Faculty Coordinator',
+    },
+    hodName: {
+      type: String,
+      default: 'Dr. Animesh Tayal',
+    },
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      default: null,
     },
     event: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',
-      required: true,
+      default: null,
     },
     registration: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Registration',
-      required: true,
+      default: null,
     },
     verificationId: {
       type: String,

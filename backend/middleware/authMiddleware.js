@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { isDbConnected } = require('../config/db');
+const mockStore = require('../config/mockStore');
 
 // Verifies token, attaches user to req.user
 const protect = async (req, res, next) => {
@@ -10,6 +12,40 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+      // In-Memory Fallback if MongoDB is not connected
+      if (!isDbConnected()) {
+        let rawUser = mockStore.findUserById(decoded.id);
+
+        if (!rawUser) {
+          try {
+            rawUser = await User.findById(decoded.id).select('-password');
+          } catch {
+            rawUser = null;
+          }
+        }
+
+        if (!rawUser) {
+          rawUser = {
+            _id: decoded.id,
+            role: decoded.role || 'student',
+            name: decoded.name || 'Arena User',
+            department: 'AI & Data Science',
+            isActive: true,
+          };
+        }
+
+        if (!rawUser.isActive) {
+          return res.status(403).json({ success: false, message: 'Account is deactivated' });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        const { password, ...safeUser } = rawUser;
+        req.user = safeUser;
+
+        return next();
+      }
+
+      // Real MongoDB lookup
       req.user = await User.findById(decoded.id).select('-password');
 
       if (!req.user) {

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-<<<<<<< HEAD
 const {
   registerForEvent,
   verifyPayment,
@@ -10,24 +9,13 @@ const {
 } = require('../controllers/registrationController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
+// Student registration routes
 router.post('/:eventId', protect, authorize('student'), registerForEvent);
 router.post('/verify-payment', protect, authorize('student'), verifyPayment);
 router.get('/my-registrations', protect, authorize('student'), getMyRegistrations);
-router.get('/event/:eventId', protect, authorize('faculty'), getEventRegistrations);
 router.patch('/:id/cancel', protect, authorize('student'), cancelRegistration);
 
-module.exports = router;
-=======
-const { protect } = require('../middleware/authMiddleware');
-const {
-  registerForEvent,
-  getMyRegistrations,
-  cancelRegistration,
-} = require('../controllers/registrationController');
-
-router.post('/:eventId', protect, registerForEvent);
-router.get('/my-registrations', protect, getMyRegistrations);
-router.patch('/:id/cancel', protect, cancelRegistration);
+// Faculty & Admin routes
+router.get('/event/:eventId', protect, authorize('faculty', 'admin'), getEventRegistrations);
 
 module.exports = router;
->>>>>>> b5eade6dd82a7ac4eb45ee39014e8e6f0cf09347

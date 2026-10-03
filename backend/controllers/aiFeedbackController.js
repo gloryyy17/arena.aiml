@@ -3,6 +3,8 @@ const Feedback = require('../models/Feedback');
 const AIFeedbackAnalysis = require('../models/AIFeedbackAnalysis');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
+const { isDbConnected } = require('../config/db');
+const mockStore = require('../config/mockStore');
 
 // @desc    Analyze feedback for an event using AI
 // @route   POST /api/ai/feedback/analyze
@@ -15,13 +17,28 @@ const analyzeEventFeedback = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Event ID is required for feedback analysis.' });
     }
 
-    const event = await Event.findById(eventId);
+    let event = null;
+    if (!isDbConnected()) {
+      event = mockStore.getEventById(eventId) || { _id: eventId, title: 'Campus Tech Event' };
+    } else {
+      try {
+        event = await Event.findById(eventId);
+      } catch {
+        event = mockStore.getEventById(eventId) || { _id: eventId, title: 'Campus Tech Event' };
+      }
+    }
+
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found.' });
     }
 
     // Fetch all feedback submissions for this event
-    const feedbackList = await Feedback.find({ event: eventId });
+    let feedbackList = [];
+    try {
+      feedbackList = await Feedback.find({ event: eventId });
+    } catch {
+      feedbackList = [];
+    }
 
     if (feedbackList.length === 0) {
       // If no live feedback submitted yet, provide initial template or demo analysis
@@ -45,7 +62,8 @@ const analyzeEventFeedback = async (req, res, next) => {
 
       const analysisData = generation.data;
 
-      const record = await AIFeedbackAnalysis.create({
+      let record = {
+        _id: `analysis-${Date.now()}`,
         event: eventId,
         analyzedBy: req.user._id,
         totalResponses: demoFeedback.length,
@@ -63,8 +81,15 @@ const analyzeEventFeedback = async (req, res, next) => {
         suggestions: analysisData.suggestions || [],
         priorityIssues: analysisData.priority_issues || [],
         summary: analysisData.summary || 'Initial review indicates strong positive engagement.',
-        promptVersion: generation.metadata.promptVersion,
-      });
+        promptVersion: generation.metadata?.promptVersion || '1.0.0',
+      };
+
+      try {
+        const dbRecord = await AIFeedbackAnalysis.create(record);
+        if (dbRecord) record = dbRecord;
+      } catch {
+        // In-memory mode
+      }
 
       return res.status(200).json({
         success: true,
@@ -90,7 +115,8 @@ const analyzeEventFeedback = async (req, res, next) => {
 
     const data = generation.data;
 
-    const analysisRecord = await AIFeedbackAnalysis.create({
+    let analysisRecord = {
+      _id: `analysis-${Date.now()}`,
       event: eventId,
       analyzedBy: req.user._id,
       totalResponses,
@@ -108,8 +134,15 @@ const analyzeEventFeedback = async (req, res, next) => {
       suggestions: data.suggestions || [],
       priorityIssues: data.priority_issues || [],
       summary: data.summary || '',
-      promptVersion: generation.metadata.promptVersion,
-    });
+      promptVersion: generation.metadata?.promptVersion || '1.0.0',
+    };
+
+    try {
+      const dbRecord = await AIFeedbackAnalysis.create(analysisRecord);
+      if (dbRecord) analysisRecord = dbRecord;
+    } catch {
+      // In-memory mode
+    }
 
     res.status(200).json({
       success: true,
@@ -125,9 +158,14 @@ const analyzeEventFeedback = async (req, res, next) => {
 // @access  Private
 const getLatestFeedbackAnalysis = async (req, res, next) => {
   try {
-    const analysis = await AIFeedbackAnalysis.findOne({ event: req.params.eventId })
-      .populate('event', 'title startDate category')
-      .sort({ createdAt: -1 });
+    let analysis = null;
+    try {
+      analysis = await AIFeedbackAnalysis.findOne({ event: req.params.eventId })
+        .populate('event', 'title startDate category')
+        .sort({ createdAt: -1 });
+    } catch {
+      analysis = null;
+    }
 
     if (!analysis) {
       return res.status(404).json({
@@ -190,9 +228,14 @@ const submitFeedback = async (req, res, next) => {
 // @access  Private (Faculty, Admin)
 const getEventFeedbacks = async (req, res, next) => {
   try {
-    const feedbacks = await Feedback.find({ event: req.params.eventId })
-      .populate('student', 'name department')
-      .sort({ createdAt: -1 });
+    let feedbacks = [];
+    try {
+      feedbacks = await Feedback.find({ event: req.params.eventId })
+        .populate('student', 'name department')
+        .sort({ createdAt: -1 });
+    } catch {
+      feedbacks = [];
+    }
 
     res.status(200).json({ success: true, count: feedbacks.length, feedbacks });
   } catch (error) {
