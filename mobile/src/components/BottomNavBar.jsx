@@ -11,7 +11,7 @@ const tabs = [
 
 const BottomNavBar = () => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 px-4 glass-panel border-t border-white/10">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 px-4 glass-panel border-t shadow-lg">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -22,8 +22,8 @@ const BottomNavBar = () => {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-2xl transition-all ${
                   isActive
-                    ? 'text-white font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'theme-text font-semibold'
+                    : 'theme-text-muted hover:theme-text'
                 }`
               }
             >
@@ -31,7 +31,9 @@ const BottomNavBar = () => {
                 <>
                   <div
                     className={`p-1.5 rounded-xl transition-all ${
-                      isActive ? 'bg-[#5B47FB] text-white shadow-md shadow-[#5B47FB]/30' : 'bg-transparent'
+                      isActive
+                        ? 'bg-[#5B47FB] text-white shadow-md shadow-[#5B47FB]/30'
+                        : 'bg-transparent text-zinc-500 dark:text-zinc-400'
                     }`}
                   >
                     <Icon size={18} />

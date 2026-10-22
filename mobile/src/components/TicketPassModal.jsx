@@ -35,12 +35,12 @@ const TicketPassModal = ({ registration, isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="w-full max-w-sm rounded-3xl bg-[#18181D] border border-white/10 overflow-hidden shadow-2xl relative flex flex-col"
+          className="w-full max-w-sm rounded-3xl theme-card overflow-hidden shadow-2xl relative flex flex-col"
         >
           {/* Top Pass Header */}
           <div className="p-5 bg-gradient-to-br from-[#5B47FB] to-[#3B82F6] text-white relative">
@@ -61,59 +61,57 @@ const TicketPassModal = ({ registration, isOpen, onClose }) => {
             </p>
           </div>
 
-          {/* Ticket Details */}
-          <div className="p-5 space-y-4">
-            <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-white/5 pb-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Pass Holder</p>
-                <p className="font-semibold text-white mt-0.5">
-                  {registration.student?.name || 'Registered Student'}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Status</p>
-                <span className="inline-flex items-center gap-1 text-emerald-400 font-bold text-[11px]">
-                  <CheckCircle size={12} /> Confirmed
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-xs text-zinc-300">
-              <div className="flex items-center gap-2">
-                <Calendar size={14} className="text-[#5B47FB]" />
-                <span>
-                  {ev.startDate
-                    ? new Date(ev.startDate).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : 'Upcoming'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-pink-400" />
-                <span className="truncate">{ev.venue || 'Campus Venue'}</span>
-              </div>
-            </div>
-
-            {/* QR Code Container */}
-            <div className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner my-2">
+          {/* Ticket Details & QR */}
+          <div className="p-6 space-y-5 text-center flex flex-col items-center">
+            {/* High contrast QR Container */}
+            <div className="p-4 rounded-3xl bg-white shadow-md border border-slate-200">
               {qrUrl ? (
-                <img src={qrUrl} alt="Entrance QR Code" className="w-44 h-44 object-contain" />
+                <img
+                  src={qrUrl}
+                  alt="Entrance QR Pass"
+                  className="w-44 h-44 object-contain"
+                />
               ) : (
-                <div className="w-44 h-44 flex items-center justify-center text-xs text-zinc-500 font-mono">
+                <div className="w-44 h-44 flex items-center justify-center text-zinc-400 font-mono text-xs">
                   Generating Pass...
                 </div>
               )}
-              <span className="font-mono text-[10px] text-zinc-600 mt-1 uppercase tracking-widest font-bold">
-                Scan at Hall Entrance
-              </span>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-zinc-500 text-[11px] font-mono">
-              <ShieldCheck size={13} className="text-[#5B47FB]" />
-              <span>Tamper-proof verifiable credential</span>
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold border border-emerald-500/20">
+                <CheckCircle size={13} /> VERIFIED ENTRANCE PASS
+              </div>
+              <p className="text-[11px] theme-text-secondary font-mono">
+                Present this QR code to the entrance volunteers at the venue.
+              </p>
+            </div>
+
+            {/* Event Metadata Strip */}
+            <div className="w-full p-3 rounded-2xl theme-card-subtle flex items-center justify-around text-xs font-mono theme-text-secondary">
+              <div className="flex items-center gap-1.5">
+                <Calendar size={13} className="text-[#5B47FB]" />
+                <span>
+                  {ev.date
+                    ? new Date(ev.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : 'TBA'}
+                </span>
+              </div>
+              <div className="h-4 w-px theme-border" />
+              <div className="flex items-center gap-1.5">
+                <MapPin size={13} className="text-[#06B6D4]" />
+                <span className="truncate max-w-[120px]">{ev.venue || 'Audi'}</span>
+              </div>
+            </div>
+
+            <div className="w-full pt-1 border-t theme-border flex items-center justify-between text-[10px] font-mono theme-text-muted">
+              <span>Pass ID: {registration._id?.slice(-8).toUpperCase()}</span>
+              <span className="inline-flex items-center gap-1 text-[#5B47FB]">
+                <ShieldCheck size={11} /> Arena Verified
+              </span>
             </div>
           </div>
         </motion.div>

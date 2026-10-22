@@ -38,14 +38,14 @@ const TicketsScreen = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen pb-24 bg-[#0F0F12] text-white">
+      <div className="min-h-screen pb-24 theme-bg theme-text transition-colors">
         <MobileHeader title="My Tickets" subtitle="Event Passes & QR Codes" />
         <div className="max-w-md mx-auto px-6 py-20 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-[#5B47FB]/15 text-[#5B47FB] flex items-center justify-center mx-auto">
             <Ticket size={28} />
           </div>
-          <h2 className="font-display text-lg font-bold">Sign In Required</h2>
-          <p className="text-xs text-zinc-400">
+          <h2 className="font-display text-lg font-bold theme-text">Sign In Required</h2>
+          <p className="text-xs theme-text-secondary">
             Sign in to view your registered event tickets and mobile entrance passes.
           </p>
           <button
@@ -60,98 +60,95 @@ const TicketsScreen = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24 bg-[#0F0F12] text-white">
-      <MobileHeader title="My Tickets" subtitle="Event Passes & QR Codes" />
+    <div className="min-h-screen pb-24 theme-bg theme-text transition-colors">
+      <MobileHeader title="My Tickets" subtitle="Digital Event Passes" />
 
       <main className="max-w-md mx-auto px-5 pt-4 space-y-4">
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-[#5B47FB]/15 to-[#3B82F6]/10 border border-[#5B47FB]/25 space-y-1 shadow-sm">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#5B47FB] dark:text-[#A5B4FC]">
+            <QrCode size={14} /> Contactless Check-In Ready
+          </div>
+          <p className="text-xs theme-text-secondary leading-relaxed">
+            Tap on any pass below to open your QR entrance code for venue check-in.
+          </p>
+        </div>
+
         {error && (
-          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-mono flex items-center gap-2">
-            <AlertCircle size={15} />
+          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-mono flex items-center gap-2">
+            <AlertCircle size={15} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
-            Active Passes ({registrations.length})
-          </p>
-        </div>
-
         {loading ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-2 text-zinc-500 font-mono text-xs">
+          <div className="flex flex-col items-center justify-center py-16 gap-3 theme-text-muted">
             <Loader2 size={24} className="animate-spin text-[#5B47FB]" />
-            <span>Loading tickets...</span>
+            <p className="font-mono text-xs">Loading your passes...</p>
           </div>
         ) : registrations.length === 0 ? (
-          <div className="p-8 rounded-3xl bg-[#18181D] border border-white/5 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-white/5 text-zinc-500 flex items-center justify-center mx-auto">
-              <Ticket size={20} />
+          <div className="p-8 rounded-3xl theme-card text-center space-y-3">
+            <div className="w-12 h-12 rounded-full theme-card-subtle flex items-center justify-center mx-auto text-zinc-400">
+              <Ticket size={22} />
             </div>
-            <h3 className="font-display text-sm font-bold text-white">No active tickets</h3>
-            <p className="text-xs text-zinc-400">
-              Browse events from the home screen and register to get instant QR passes.
+            <p className="font-display text-sm font-bold theme-text">No Passes Yet</p>
+            <p className="text-xs theme-text-secondary">
+              Browse the Events tab and register to receive your verified QR boarding pass.
             </p>
             <button
               onClick={() => navigate('/')}
-              className="px-4 py-2 rounded-full bg-white/10 text-xs text-white hover:bg-white/20 transition-all font-medium"
+              className="px-5 py-2 rounded-full bg-[#5B47FB] text-white text-xs font-semibold shadow-md active:scale-95 transition-all mt-2"
             >
               Explore Events
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {registrations.map((reg) => {
               const ev = reg.event || {};
-              const isConfirmed = reg.registrationStatus === 'confirmed';
-
               return (
                 <div
                   key={reg._id}
                   onClick={() => setSelectedPass(reg)}
-                  className="p-5 rounded-3xl bg-gradient-to-br from-[#1E1E26] to-[#141419] border border-white/10 hover:border-[#5B47FB]/40 transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden space-y-3"
+                  className="p-4 rounded-3xl theme-card space-y-3 cursor-pointer active:scale-[0.98] transition-all hover:border-[#5B47FB]/40 relative overflow-hidden"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#A5B4FC] bg-[#5B47FB]/15 px-2 py-0.5 rounded-full">
-                        {ev.category || 'Event'}
+                    <div className="space-y-1">
+                      <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-[#5B47FB] bg-[#5B47FB]/10 px-2 py-0.5 rounded-full inline-block">
+                        {ev.category || 'Pass'}
                       </span>
-                      <h3 className="font-display text-base font-bold text-white mt-1.5 leading-snug">
-                        {ev.title || 'Event Pass'}
+                      <h3 className="font-display text-base font-bold theme-text leading-snug">
+                        {ev.title || 'Campus Event'}
                       </h3>
                     </div>
 
-                    <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white shrink-0 shadow-sm border border-white/10">
+                    <div className="w-10 h-10 rounded-2xl bg-[#5B47FB]/10 text-[#5B47FB] flex items-center justify-center shrink-0 border border-[#5B47FB]/20 shadow-sm">
                       <QrCode size={20} />
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 text-xs text-zinc-400">
+                  <div className="flex flex-wrap items-center gap-4 text-[11px] theme-text-secondary font-mono">
                     <div className="flex items-center gap-1.5">
                       <Calendar size={13} className="text-[#5B47FB]" />
                       <span>
-                        {ev.startDate
-                          ? new Date(ev.startDate).toLocaleDateString('en-IN', {
-                              day: 'numeric',
+                        {ev.date
+                          ? new Date(ev.date).toLocaleDateString('en-US', {
                               month: 'short',
-                              year: 'numeric',
+                              day: 'numeric',
                             })
-                          : 'TBD'}
+                          : 'TBA'}
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-1.5 truncate">
-                      <MapPin size={13} className="text-pink-400" />
-                      <span className="truncate">{ev.venue || 'Campus Venue'}</span>
+                    <div className="flex items-center gap-1.5">
+                      <MapPin size={13} className="text-[#06B6D4]" />
+                      <span className="truncate max-w-[150px]">{ev.venue || 'Campus Audi'}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5 text-[11px] font-mono">
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <CheckCircle size={12} /> {reg.registrationStatus?.toUpperCase()}
+                  <div className="pt-2.5 flex items-center justify-between border-t theme-border text-[11px] font-mono">
+                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                      <CheckCircle size={12} /> Confirmed
                     </span>
-                    <span className="text-[#A5B4FC] font-bold flex items-center gap-1">
-                      Tap to open QR Pass →
-                    </span>
+                    <span className="text-[#5B47FB] font-semibold underline">View QR Pass →</span>
                   </div>
                 </div>
               );
@@ -160,10 +157,9 @@ const TicketsScreen = () => {
         )}
       </main>
 
-      {/* QR Code Pass Modal */}
       <TicketPassModal
         registration={selectedPass}
-        isOpen={Boolean(selectedPass)}
+        isOpen={!!selectedPass}
         onClose={() => setSelectedPass(null)}
       />
     </div>

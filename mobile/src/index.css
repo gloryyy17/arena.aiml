@@ -1,13 +1,42 @@
 @import "tailwindcss";
 
+:root {
+  --bg-page: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-subtle: #F1F5F9;
+  --bg-input: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border-subtle: #E2E8F0;
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --bg-page: #0F0F12;
+  --bg-card: #18181D;
+  --bg-card-subtle: #1C1C22;
+  --bg-input: #1C1C22;
+  --text-primary: #F3F3F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(22, 22, 27, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
+}
+
 @layer base {
   * {
     box-sizing: border-box;
   }
   body {
-    background-color: #0F0F12;
-    color: #F3F3F5;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -28,10 +57,41 @@
   scrollbar-width: none;
 }
 
-/* Glassmorphism utility for bottom bar and cards */
+/* Dynamic theme classes */
+.theme-bg {
+  background-color: var(--bg-page);
+}
+.theme-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+.theme-card-subtle {
+  background-color: var(--bg-card-subtle);
+  border: 1px solid var(--border-subtle);
+}
+.theme-input {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.theme-text {
+  color: var(--text-primary);
+}
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+.theme-text-muted {
+  color: var(--text-muted);
+}
+.theme-border {
+  border-color: var(--border-subtle);
+}
+
+/* Glassmorphism utility for bottom bar and headers */
 .glass-panel {
-  background: rgba(22, 22, 27, 0.75);
+  background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border);
 }

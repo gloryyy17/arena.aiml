@@ -63,7 +63,7 @@ const HomeScreen = () => {
   });
 
   return (
-    <div className="min-h-screen pb-24 bg-[#0F0F12] text-white">
+    <div className="min-h-screen pb-24 theme-bg theme-text transition-colors">
       <MobileHeader title="Arena AIML" subtitle="Campus Event Hub" />
 
       <main className="max-w-md mx-auto px-5 pt-4 space-y-5">
@@ -75,23 +75,23 @@ const HomeScreen = () => {
             placeholder="Search hackathons, fests, workshops..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#1C1C22] border border-white/10 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#5B47FB] transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl theme-input text-xs outline-none focus:border-[#5B47FB] transition-colors shadow-sm"
           />
         </div>
 
         {/* AI Recommendations Callout Card */}
         <div
           onClick={() => navigate('/recommendations')}
-          className="p-4 rounded-3xl bg-gradient-to-r from-[#5B47FB]/20 via-[#06B6D4]/10 to-transparent border border-[#5B47FB]/30 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
+          className="p-4 rounded-3xl bg-gradient-to-r from-[#5B47FB]/15 via-[#06B6D4]/10 to-transparent border border-[#5B47FB]/30 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform shadow-sm"
         >
           <div className="space-y-1">
-            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#A5B4FC]">
+            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-[#5B47FB] dark:text-[#A5B4FC]">
               <Sparkles size={11} /> AI Match Engine
             </span>
-            <p className="font-display text-sm font-semibold text-white">
+            <p className="font-display text-sm font-semibold theme-text">
               Personalized Event Picks
             </p>
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-[11px] theme-text-secondary">
               Curated based on your department & skills
             </p>
           </div>
@@ -101,15 +101,15 @@ const HomeScreen = () => {
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`px-4 py-1.5 rounded-full text-xs font-mono whitespace-nowrap transition-all shadow-sm ${
                 category === cat
-                  ? 'bg-white text-black font-semibold shadow-sm'
-                  : 'bg-[#1C1C22] text-zinc-400 border border-white/5 hover:text-white'
+                  ? 'bg-[#5B47FB] text-white font-semibold shadow-md shadow-[#5B47FB]/25'
+                  : 'theme-card theme-text-secondary hover:theme-text'
               }`}
             >
               {cat}
@@ -117,83 +117,85 @@ const HomeScreen = () => {
           ))}
         </div>
 
-        {/* Notification Toast */}
+        {/* Toast / Notification banner */}
         {message && (
-          <div className="p-3 rounded-2xl bg-[#5B47FB]/20 border border-[#5B47FB]/40 text-xs text-[#A5B4FC] font-mono text-center">
-            {message}
+          <div className="p-3 rounded-2xl bg-[#5B47FB]/15 border border-[#5B47FB]/30 text-xs text-[#5B47FB] dark:text-[#A5B4FC] font-mono flex items-center gap-2">
+            <Sparkles size={14} className="shrink-0" />
+            <span>{message}</span>
           </div>
         )}
 
         {/* Events Feed */}
-        <div className="space-y-4">
+        <div className="space-y-4 pt-1">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-base font-bold text-white">
+            <h2 className="font-display text-sm font-bold theme-text uppercase tracking-wider">
               Upcoming Events ({filteredEvents.length})
             </h2>
           </div>
 
           {loading ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-2 text-zinc-500 font-mono text-xs">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 theme-text-muted">
               <Loader2 size={24} className="animate-spin text-[#5B47FB]" />
-              <span>Loading campus events...</span>
+              <p className="font-mono text-xs">Loading campus events...</p>
             </div>
           ) : filteredEvents.length === 0 ? (
-            <div className="py-12 text-center text-zinc-500 font-mono text-xs">
-              No events found in this category.
+            <div className="p-8 rounded-3xl theme-card text-center space-y-2">
+              <p className="font-display text-sm font-bold theme-text">No Events Found</p>
+              <p className="text-xs theme-text-secondary">
+                Try selecting another category or adjusting your search term.
+              </p>
             </div>
           ) : (
             filteredEvents.map((ev) => (
               <div
                 key={ev._id}
-                className="p-4 rounded-3xl bg-[#18181D] border border-white/10 hover:border-white/20 transition-all space-y-3"
+                className="p-5 rounded-3xl theme-card space-y-3.5 transition-all hover:border-[#5B47FB]/40"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#A5B4FC] bg-[#5B47FB]/15 px-2 py-0.5 rounded-full">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-[#5B47FB] bg-[#5B47FB]/10 px-2 py-0.5 rounded-full inline-block">
                       {ev.category || 'Event'}
                     </span>
-                    <h3 className="font-display text-base font-bold text-white mt-1.5 leading-snug">
+                    <h3 className="font-display text-base font-bold theme-text leading-snug">
                       {ev.title}
                     </h3>
                   </div>
-                  <span className="font-mono text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
-                    {ev.fee === 0 || !ev.fee ? 'FREE' : `₹${ev.fee}`}
+                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Free Pass
                   </span>
                 </div>
 
-                <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs theme-text-secondary line-clamp-2 leading-relaxed">
                   {ev.description}
                 </p>
 
-                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-zinc-400">
+                <div className="flex flex-wrap items-center gap-4 text-[11px] theme-text-secondary font-mono pt-1">
                   <div className="flex items-center gap-1.5">
                     <Calendar size={13} className="text-[#5B47FB]" />
-                    <span>
-                      {ev.startDate
-                        ? new Date(ev.startDate).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                          })
-                        : 'TBD'}
-                    </span>
+                    <span>{new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                   </div>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={13} className="text-[#06B6D4]" />
+                    <span className="truncate max-w-[140px]">{ev.venue || 'Campus Main Audi'}</span>
+                  </div>
+                </div>
 
-                  <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                    <MapPin size={13} className="text-pink-400 shrink-0" />
-                    <span className="truncate">{ev.venue || 'Campus'}</span>
+                <div className="pt-2 flex items-center justify-between border-t theme-border">
+                  <div className="text-[11px] font-mono theme-text-muted">
+                    Capacity: <span className="font-bold theme-text">{ev.registeredCount || 0}</span> / {ev.capacity || 100}
                   </div>
 
                   <button
                     onClick={(e) => handleRegister(ev._id, e)}
                     disabled={registeringId === ev._id}
-                    className="px-3.5 py-1.5 rounded-full bg-[#5B47FB] text-white font-semibold text-xs active:scale-95 transition-all shadow-sm flex items-center gap-1 disabled:opacity-50"
+                    className="px-4 py-2 rounded-full bg-[#5B47FB] hover:bg-[#4F3DDB] text-white text-xs font-semibold shadow-md shadow-[#5B47FB]/20 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
                   >
                     {registeringId === ev._id ? (
                       <Loader2 size={12} className="animate-spin" />
                     ) : (
                       <Check size={12} />
                     )}
-                    <span>Register</span>
+                    Register Pass
                   </button>
                 </div>
               </div>

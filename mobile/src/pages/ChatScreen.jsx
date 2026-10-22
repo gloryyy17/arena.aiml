@@ -72,7 +72,7 @@ const ChatScreen = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0F0F12] text-white">
+    <div className="flex flex-col h-screen theme-bg theme-text transition-colors">
       <MobileHeader title="Arena Concierge" subtitle="Conversational Campus Assistant" />
 
       {/* Messages Thread */}
@@ -95,14 +95,14 @@ const ChatScreen = () => {
                   className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                     isUser
                       ? 'bg-[#5B47FB] text-white rounded-br-xs shadow-md'
-                      : 'bg-[#1C1C22] text-zinc-200 border border-white/5 rounded-bl-xs'
+                      : 'theme-card theme-text rounded-bl-xs'
                   }`}
                 >
                   <p className="whitespace-pre-line">{m.content}</p>
                 </div>
 
                 {isUser && (
-                  <div className="w-7 h-7 rounded-full bg-zinc-800 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-slate-300 dark:bg-zinc-800 text-slate-700 dark:text-white flex items-center justify-center shrink-0 mt-0.5">
                     <User size={14} />
                   </div>
                 )}
@@ -115,7 +115,7 @@ const ChatScreen = () => {
                     <button
                       key={qIdx}
                       onClick={() => handleSend(q)}
-                      className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-white/5 hover:bg-[#5B47FB]/20 border border-white/10 hover:border-[#5B47FB]/30 text-zinc-300 hover:text-white transition-all text-left"
+                      className="text-[11px] font-mono px-2.5 py-1 rounded-full theme-card hover:border-[#5B47FB]/40 theme-text-secondary hover:theme-text transition-all text-left shadow-sm"
                     >
                       {q} →
                     </button>
@@ -127,7 +127,7 @@ const ChatScreen = () => {
         })}
 
         {loading && (
-          <div className="flex items-center gap-2 text-xs font-mono text-zinc-500">
+          <div className="flex items-center gap-2 text-xs font-mono theme-text-muted">
             <div className="w-7 h-7 rounded-full bg-[#5B47FB]/20 text-[#5B47FB] flex items-center justify-center">
               <Loader2 size={14} className="animate-spin" />
             </div>
@@ -139,7 +139,7 @@ const ChatScreen = () => {
       </div>
 
       {/* Input Bar Fixed Above Bottom Navigation */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 p-3 glass-panel border-t border-white/10">
+      <div className="fixed bottom-16 left-0 right-0 z-30 p-3 glass-panel border-t shadow-lg">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -153,7 +153,7 @@ const ChatScreen = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-2xl bg-[#1C1C22] border border-white/10 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#5B47FB] transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-2xl theme-input text-xs outline-none focus:border-[#5B47FB] transition-colors shadow-sm"
           />
           <button
             type="submit"

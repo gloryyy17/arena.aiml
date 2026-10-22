@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getErrorMessage } from '../api/axios';
-import { Sparkles, ArrowLeft, RefreshCw, KeyRound, Mail } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { getErrorMessage, getServerUrl } from '../api/axios';
+import ServerConfigModal from '../components/ServerConfigModal';
+import { Sparkles, ArrowLeft, RefreshCw, KeyRound, Mail, Server, Sun, Moon, AlertTriangle } from 'lucide-react';
 
 const LoginScreen = () => {
   const { login } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showServerModal, setShowServerModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +24,8 @@ const LoginScreen = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(getErrorMessage(err, 'Invalid credentials.'));
+      const msg = getErrorMessage(err, 'Invalid credentials.');
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -31,65 +36,109 @@ const LoginScreen = () => {
     setPassword('password123');
   };
 
+  const isNetworkErr = error && (
+    error.toLowerCase().includes('network') ||
+    error.toLowerCase().includes('connect') ||
+    error.toLowerCase().includes('timeout') ||
+    error.toLowerCase().includes('unreachable')
+  );
+
   return (
-    <div className="min-h-screen bg-[#0F0F12] text-white p-6 flex flex-col justify-between">
+    <div className="min-h-screen theme-bg theme-text p-6 flex flex-col justify-between transition-colors">
       <div>
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 active:scale-95 transition-all mb-8"
-        >
-          <ArrowLeft size={16} />
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 rounded-full theme-card flex items-center justify-center text-zinc-500 hover:theme-text active:scale-95 transition-all shadow-sm"
+          >
+            <ArrowLeft size={16} />
+          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Server Settings button */}
+            <button
+              onClick={() => setShowServerModal(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full theme-card text-[11px] font-mono text-zinc-600 dark:text-zinc-300 shadow-sm active:scale-95 transition-all"
+            >
+              <Server size={12} className="text-[#5B47FB]" />
+              <span className="truncate max-w-[130px]">
+                {getServerUrl().replace(/^https?:\/\//, '').replace(/\/api$/, '')}
+              </span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-full theme-card flex items-center justify-center text-zinc-600 dark:text-zinc-300 active:scale-95 transition-all shadow-sm"
+            >
+              {isDark ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-[#5B47FB]" />}
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-2 mb-8">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5B47FB]/15 border border-[#5B47FB]/30 text-[#A5B4FC] text-xs font-mono font-bold">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#5B47FB]/15 border border-[#5B47FB]/30 text-[#5B47FB] dark:text-[#A5B4FC] text-xs font-mono font-bold">
             <Sparkles size={12} /> Student Access
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">
+          <h1 className="font-display text-3xl font-bold tracking-tight theme-text">
             Sign In to Arena
           </h1>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs theme-text-secondary">
             Access your personalized event passes, AI recommendations, and AI concierge assistant.
           </p>
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-mono mb-4">
-            {error}
+          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 font-mono mb-4 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle size={15} className="shrink-0 mt-0.5 text-red-500" />
+              <span>{error}</span>
+            </div>
+            {isNetworkErr && (
+              <div className="pt-2 border-t border-red-500/20">
+                <button
+                  type="button"
+                  onClick={() => setShowServerModal(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#5B47FB] dark:text-[#A5B4FC] underline"
+                >
+                  <Server size={12} /> Change Backend IP / Server Address
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+            <label className="block text-[11px] font-mono uppercase tracking-wider theme-text-secondary mb-1.5">
               Student Email
             </label>
             <div className="relative">
-              <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@arena.aiml"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#1C1C22] border border-white/10 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#5B47FB] transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-2xl theme-input text-xs outline-none focus:border-[#5B47FB] transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
+            <label className="block text-[11px] font-mono uppercase tracking-wider theme-text-secondary mb-1.5">
               Password
             </label>
             <div className="relative">
-              <KeyRound size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <KeyRound size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#1C1C22] border border-white/10 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#5B47FB] transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-2xl theme-input text-xs outline-none focus:border-[#5B47FB] transition-colors"
               />
             </div>
           </div>
@@ -105,20 +154,31 @@ const LoginScreen = () => {
         </form>
 
         {/* Demo Fast Sign-in helper */}
-        <div className="mt-6 pt-6 border-t border-white/5 text-center">
+        <div className="mt-6 pt-6 border-t theme-border text-center">
           <button
             type="button"
             onClick={handleDemoStudent}
-            className="text-xs font-mono text-[#A5B4FC] hover:underline"
+            className="text-xs font-mono text-[#5B47FB] dark:text-[#A5B4FC] hover:underline"
           >
             Fill Demo Student Account
           </button>
         </div>
       </div>
 
-      <p className="text-[11px] text-center text-zinc-600 font-mono py-4">
-        Arena AIML Mobile • Capacitor Shell
-      </p>
+      <div className="text-center py-4">
+        <button
+          type="button"
+          onClick={() => setShowServerModal(true)}
+          className="text-[11px] theme-text-muted font-mono hover:theme-text transition-colors"
+        >
+          Server Settings ⚙️
+        </button>
+      </div>
+
+      <ServerConfigModal
+        isOpen={showServerModal}
+        onClose={() => setShowServerModal(false)}
+      />
     </div>
   );
 };

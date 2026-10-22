@@ -51,38 +51,41 @@ const RecommendationsScreen = () => {
   };
 
   return (
-    <div className="min-h-screen pb-24 bg-[#0F0F12] text-white">
+    <div className="min-h-screen pb-24 theme-bg theme-text transition-colors">
       <MobileHeader title="For You" subtitle="AI Personalization Engine" />
 
       <main className="max-w-md mx-auto px-5 pt-4 space-y-4">
         {/* Engine Banner */}
-        <div className="p-4 rounded-3xl bg-gradient-to-br from-[#06B6D4]/20 via-[#5B47FB]/15 to-transparent border border-[#06B6D4]/30 space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider text-[#67E8F9] bg-[#06B6D4]/15">
+        <div className="p-4 rounded-3xl bg-gradient-to-br from-[#06B6D4]/15 via-[#5B47FB]/10 to-transparent border border-[#06B6D4]/25 space-y-2 shadow-sm">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider text-[#06B6D4] bg-[#06B6D4]/15">
             <Compass size={12} /> Multi-Signal Heuristic Matching
           </div>
-          <p className="font-display text-sm font-semibold text-white">
+          <p className="font-display text-sm font-semibold theme-text">
             Tailored for {user?.name || 'Students'}
           </p>
-          <p className="text-[11px] text-zinc-400 leading-relaxed">
+          <p className="text-[11px] theme-text-secondary leading-relaxed">
             Events matched using your profile department ({user?.department || 'AI & Data Science'}) and interests.
           </p>
         </div>
 
         {message && (
-          <div className="p-3 rounded-2xl bg-[#5B47FB]/20 border border-[#5B47FB]/40 text-xs text-[#A5B4FC] font-mono text-center">
+          <div className="p-3 rounded-2xl bg-[#5B47FB]/15 border border-[#5B47FB]/30 text-xs text-[#5B47FB] dark:text-[#A5B4FC] font-mono text-center">
             {message}
           </div>
         )}
 
         <div className="space-y-4">
           {loading ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-2 text-zinc-500 font-mono text-xs">
+            <div className="py-12 flex flex-col items-center justify-center gap-2 theme-text-muted font-mono text-xs">
               <Loader2 size={24} className="animate-spin text-[#06B6D4]" />
               <span>Analyzing recommendations...</span>
             </div>
           ) : recommendations.length === 0 ? (
-            <div className="py-12 text-center text-zinc-500 font-mono text-xs">
-              No matching events found at this time.
+            <div className="p-8 rounded-3xl theme-card text-center space-y-2">
+              <p className="font-display text-sm font-bold theme-text">No Recommendations Found</p>
+              <p className="text-xs theme-text-secondary">
+                Check back as new hackathons and workshops are published.
+              </p>
             </div>
           ) : (
             recommendations.map((rec) => {
@@ -92,29 +95,29 @@ const RecommendationsScreen = () => {
               return (
                 <div
                   key={ev._id || rec.id}
-                  className="p-4 rounded-3xl bg-[#18181D] border border-white/10 hover:border-[#06B6D4]/30 transition-all space-y-3 relative overflow-hidden"
+                  className="p-4 rounded-3xl theme-card hover:border-[#06B6D4]/40 transition-all space-y-3 relative overflow-hidden"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#67E8F9] bg-[#06B6D4]/15 px-2 py-0.5 rounded-full">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#06B6D4] bg-[#06B6D4]/10 px-2 py-0.5 rounded-full">
                         {matchScore}% Match
                       </span>
-                      <h3 className="font-display text-base font-bold text-white mt-1.5 leading-snug">
+                      <h3 className="font-display text-base font-bold theme-text mt-1.5 leading-snug">
                         {ev.title}
                       </h3>
                     </div>
-                    <span className="font-mono text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
+                    <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full shrink-0">
                       {ev.fee === 0 || !ev.fee ? 'FREE' : `₹${ev.fee}`}
                     </span>
                   </div>
 
                   {/* AI Reason Badge */}
-                  <div className="p-2.5 rounded-2xl bg-white/5 border border-white/5 text-[11px] text-zinc-300 flex items-start gap-2">
+                  <div className="p-2.5 rounded-2xl theme-card-subtle text-[11px] theme-text-secondary flex items-start gap-2">
                     <Sparkles size={13} className="text-[#06B6D4] shrink-0 mt-0.5" />
                     <span className="leading-snug">{rec.reason || 'Strong topical match for your skills.'}</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-between pt-2 border-t theme-border text-[11px] theme-text-secondary">
                     <div className="flex items-center gap-1.5">
                       <Calendar size={13} className="text-[#5B47FB]" />
                       <span>
@@ -128,7 +131,7 @@ const RecommendationsScreen = () => {
                     </div>
 
                     <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                      <MapPin size={13} className="text-pink-400 shrink-0" />
+                      <MapPin size={13} className="text-pink-500 shrink-0" />
                       <span className="truncate">{ev.venue || 'Campus'}</span>
                     </div>
 

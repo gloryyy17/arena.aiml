@@ -1,17 +1,59 @@
 import axios from 'axios';
 
-// On mobile emulators:
-// Android Emulator uses 10.0.2.2 to reach host localhost:5000
-// iOS Simulator uses localhost:5000
-// Physical phones use your local LAN IP (e.g. http://192.168.1.X:5000/api)
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:5000/api'
-    : '/api');
+// Default host for local network / mobile devices
+// 10.18.157.15 is the current local machine Wi-Fi IP
+export const DEFAULT_SERVER_URL = 'http://10.18.157.15:5000/api';
+
+export const getServerUrl = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('arena_server_url');
+    if (saved) return saved;
+  }
+  return DEFAULT_SERVER_URL;
+};
+
+export const setServerUrl = (url) => {
+  if (!url) return;
+  let formatted = url.trim();
+  // Strip trailing slash
+  if (formatted.endsWith('/')) {
+    formatted = formatted.slice(0, -1);
+  }
+  // Append /api if not present
+  if (!formatted.endsWith('/api')) {
+    formatted = `${formatted}/api`;
+  }
+  localStorage.setItem('arena_server_url', formatted);
+  api.defaults.baseURL = formatted;
+  return formatted;
+};
+
+export const testServerConnection = async (targetUrl) => {
+  let url = (targetUrl || getServerUrl()).trim();
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  if (!url.endsWith('/api')) url = `${url}/api`;
+
+  try {
+    const res = await axios.get(`${url}/events`, { timeout: 5000 });
+    return {
+      success: true,
+      message: `Connected! (${res.data?.events?.length || 0} events available)`,
+    };
+  } catch (err) {
+    let msg = err.message;
+    if (err.code === 'ECONNABORTED') {
+      msg = 'Connection timed out. Check if server is running and on same Wi-Fi.';
+    } else if (err.response?.status) {
+      msg = `Server replied with status ${err.response.status}`;
+    } else if (msg.includes('Network Error')) {
+      msg = 'Network Error. Check Wi-Fi, IP address, and firewall port 5000.';
+    }
+    return { success: false, message: msg };
+  }
+};
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getServerUrl(),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -20,6 +62,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    config.baseURL = getServerUrl();
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
