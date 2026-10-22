@@ -135,7 +135,7 @@ function App() {
         <Route
           path="/ai-hub/recommendations"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['student', 'faculty']}>
               <RecommendationsView />
             </ProtectedRoute>
           }

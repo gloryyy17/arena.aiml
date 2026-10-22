@@ -68,4 +68,19 @@ app.use('/api/certificates', certificateRoutes);
 // Error handler (must be registered after all route handlers)
 app.use(errorHandler);
 
+// In production, serve built frontend assets if present
+const path = require('path');
+const frontendDist = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  const indexPath = path.join(frontendDist, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) next();
+  });
+});
+
 module.exports = app;

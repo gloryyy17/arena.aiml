@@ -17,7 +17,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
-const navItems = [
+const baseNavItems = [
   { label: '← AI Hub', to: '/ai-hub' },
   { label: 'Chatbot', to: '/ai-hub/chat' },
   { label: 'Recommendations', to: '/ai-hub/recommendations' },
@@ -36,6 +36,9 @@ const quickSuggestions = [
 
 const ChatbotPage = () => {
   const { user } = useAuth();
+  const navItems = user?.role === 'admin'
+    ? baseNavItems.filter((i) => i.to !== '/ai-hub/recommendations')
+    : baseNavItems;
   const [messages, setMessages] = useState([
     {
       role: 'assistant',

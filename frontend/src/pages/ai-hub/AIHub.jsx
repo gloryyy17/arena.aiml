@@ -26,7 +26,7 @@ const modules = [
     badge: 'Intelligence',
     badgeColor: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
     color: 'from-cyan-500/20 to-sky-500/5',
-    allowedRoles: ['student', 'faculty', 'admin'],
+    allowedRoles: ['student', 'faculty'],
   },
   {
     id: 'certificate',
@@ -105,6 +105,7 @@ const AIHub = () => {
     (mod) => !mod.allowedRoles || mod.allowedRoles.includes(user?.role)
   );
 
+  const isAdmin = user?.role === 'admin';
   const navItems = isStudent
     ? [
         { label: 'Browse Events', to: '/dashboard' },
@@ -119,7 +120,7 @@ const AIHub = () => {
         { label: 'Event Copy', to: '/ai-hub/description' },
         { label: 'Email Studio', to: '/ai-hub/email' },
         { label: 'Feedback Analysis', to: '/ai-hub/feedback' },
-        { label: 'Recommendations', to: '/ai-hub/recommendations' },
+        ...(!isAdmin ? [{ label: 'Recommendations', to: '/ai-hub/recommendations' }] : []),
         { label: 'Prompt Registry', to: '/ai-hub/prompts' },
       ];
 
