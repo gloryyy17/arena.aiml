@@ -28,7 +28,7 @@ class MockStore {
       },
       {
         _id: 'mock-user-faculty-1',
-        name: 'Dr. Alan Turing',
+        name: 'Faculty Coordinator',
         email: 'faculty@arena.aiml',
         password: defaultPasswordHash,
         role: 'faculty',
@@ -39,8 +39,8 @@ class MockStore {
       },
       {
         _id: 'mock-user-admin-1',
-        name: 'Dean of Academics',
-        email: 'admin@arena.aiml',
+        name: 'System Administrator',
+        email: 'admin@admin.arena.aiml',
         password: defaultPasswordHash,
         role: 'admin',
         department: 'Administration',
@@ -54,6 +54,8 @@ class MockStore {
       this.users.set(u.email.toLowerCase(), u);
       this.users.set(u._id, u);
     }
+    // Backward-compat mapping for admin@arena.aiml
+    this.users.set('admin@arena.aiml', demoUsers[2]);
 
     // Seed standard published events
     const demoEvents = [
@@ -72,7 +74,7 @@ class MockStore {
         status: 'approved',
         isPublished: true,
         tags: ['AI', 'Hackathon', 'LLM', 'Autonomous Agents'],
-        createdBy: { _id: 'mock-user-faculty-1', name: 'Dr. Alan Turing', department: 'AI & Data Science' },
+        createdBy: { _id: 'mock-user-faculty-1', name: 'Faculty Coordinator', department: 'AI & Data Science' },
         createdAt: new Date(),
       },
       {

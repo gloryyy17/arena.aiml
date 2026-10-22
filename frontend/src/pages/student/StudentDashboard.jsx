@@ -21,8 +21,7 @@ import api, { getErrorMessage } from '../../api/axios';
 const navItems = [
   { label: 'Browse Events', to: '/dashboard' },
   { label: '🎯 AI Recommendations', to: '/ai-hub/recommendations' },
-  { label: '🤖 AI Concierge Chat', to: '/ai-hub/chat' },
-  { label: '⭐ Feedback & Reviews', to: '/ai-hub/feedback' },
+  { label: '🎟️ My Registrations', to: '/dashboard/registrations' },
 ];
 
 const categories = ['All', 'Technical', 'Workshop', 'Cultural', 'Sports', 'Seminar'];

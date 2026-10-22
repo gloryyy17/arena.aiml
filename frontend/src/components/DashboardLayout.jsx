@@ -4,14 +4,21 @@ import ThemeToggle from './ThemeToggle';
 import { LogOut, Sparkles } from 'lucide-react';
 
 const DashboardLayout = ({ children, navItems = [] }) => {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
 
-  // Common quick links
-  const defaultNav = [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: '✨ AI Hub', to: '/ai-hub' },
-  ];
+  const isStudent = user?.role === 'student';
+
+  // Common quick links tailored by role
+  const defaultNav = isStudent
+    ? [
+        { label: 'Browse Events', to: '/dashboard' },
+        { label: '🎯 AI Recommendations', to: '/ai-hub/recommendations' },
+      ]
+    : [
+        { label: 'Dashboard', to: '/dashboard' },
+        { label: '✨ AI Hub', to: '/ai-hub' },
+      ];
 
   const combinedNav = navItems && navItems.length > 0 ? navItems : defaultNav;
 
@@ -22,9 +29,11 @@ const DashboardLayout = ({ children, navItems = [] }) => {
         <div>
           <Link to="/dashboard" className="font-display text-xl font-semibold flex items-center gap-2 mb-8">
             <span>AIML Arena</span>
-            <span className="font-mono text-[10px] uppercase tracking-wider bg-sticker text-ink-light px-2 py-0.5 rounded-full font-bold">
-              AI Hub
-            </span>
+            {!isStudent && (
+              <span className="font-mono text-[10px] uppercase tracking-wider bg-sticker text-ink-light px-2 py-0.5 rounded-full font-bold">
+                AI Hub
+              </span>
+            )}
           </Link>
 
           <nav className="flex flex-col gap-1.5">
@@ -53,7 +62,7 @@ const DashboardLayout = ({ children, navItems = [] }) => {
               {user?.name?.[0] || 'U'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-semibold truncate">{user?.name}</p>
+              <p className="text-xs font-semibold truncate">{user?.name || 'User'}</p>
               <p className="text-[11px] font-mono opacity-50 uppercase">{user?.role}</p>
             </div>
           </div>
@@ -74,40 +83,25 @@ const DashboardLayout = ({ children, navItems = [] }) => {
             <p className="text-xs font-mono uppercase tracking-wider opacity-60">
               {user?.department || 'Arena AIML Platform'} • {user?.role?.toUpperCase()}
             </p>
-            <p className="font-display text-lg font-semibold">{user?.name}</p>
+            <p className="font-display text-lg font-semibold">{user?.name || 'User'}</p>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Quick Demo Role Switcher */}
-            <div className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-black/5 dark:bg-white/5 border border-border-light dark:border-border-dark text-[11px] font-mono">
-              <button
-                type="button"
-                onClick={() => switchRole('faculty')}
-                className={`px-2.5 py-1 rounded-full transition-all ${
-                  user?.role === 'faculty' ? 'bg-accent text-white font-bold shadow-xs' : 'opacity-60 hover:opacity-100'
-                }`}
-                title="Switch to Faculty View"
+            {!isStudent ? (
+              <Link
+                to="/ai-hub"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-accent text-white text-xs font-mono font-medium hover:opacity-90 transition-opacity shadow-sm"
               >
-                Faculty
-              </button>
-              <button
-                type="button"
-                onClick={() => switchRole('admin')}
-                className={`px-2.5 py-1 rounded-full transition-all ${
-                  user?.role === 'admin' ? 'bg-accent text-white font-bold shadow-xs' : 'opacity-60 hover:opacity-100'
-                }`}
-                title="Switch to Admin Moderation View"
+                <Sparkles size={13} /> Launch AI Hub
+              </Link>
+            ) : (
+              <Link
+                to="/ai-hub/recommendations"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-accent/15 text-accent text-xs font-mono font-medium hover:bg-accent/25 transition-all shadow-xs"
               >
-                Admin
-              </button>
-            </div>
-
-            <Link
-              to="/ai-hub"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-accent text-white text-xs font-mono font-medium hover:opacity-90 transition-opacity shadow-sm"
-            >
-              <Sparkles size={13} /> Launch AI Hub
-            </Link>
+                <Sparkles size={13} /> AI Recommendations
+              </Link>
+            )}
             <ThemeToggle />
           </div>
         </header>

@@ -37,21 +37,46 @@ class MockProvider extends BaseProvider {
         userQuery = lower.slice(uqIdx + 'user question:'.length).split('please answer')[0].trim();
       }
 
-      let answer = 'Hello! I am your Arena AI Assistant. How can I help you today? You can ask me about upcoming hackathons, campus workshops, registration deadlines, or digital certificates.';
+      let answer = '';
       let suggestedQueries = [
         'What events are happening this week?',
+        'Tell me about the AI Hackathon',
         'How do I register for an event?',
-        'Show Technical workshops',
       ];
       let referencedEventIds = [];
 
-      if (/^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening))\b/i.test(userQuery) || userQuery === 'hello' || userQuery === 'hi') {
-        answer = 'Hello! I am your Arena AI Assistant. How can I help you today? You can ask me about upcoming hackathons, campus workshops, registration deadlines, or digital certificates.';
-        suggestedQueries = [
-          'What events are happening this week?',
-          'How do I register for an event?',
-          'Show Technical workshops',
-        ];
+      // Conversational intent checks
+      const isHowAreYou = /how\s*(are\s*you|was\s*your\s*day|is\s*your\s*day|'s\s*it\s*going|are\s*things|have\s*you\s*been|do\s*you\s*do)/i.test(userQuery);
+      const isWhatsUp = /what('s|\s*is)\s*(up|new|happening|cooking)|wassup|sup\b/i.test(userQuery);
+      const isWhoAreYou = /who\s*(are\s*you|made\s*you|created\s*you)|what\s*are\s*you|tell\s*me\s*about\s*yourself/i.test(userQuery);
+      const isGratitude = /thank(s|\s*you)|\bthx\b|appreciate\s*it/i.test(userQuery);
+      const isGreeting = /^(hi|hello|hey|greetings|good\s*(morning|afternoon|evening|day))\b/i.test(userQuery.trim());
+      const isJoke = /joke|make\s*me\s*laugh|funny|humor/i.test(userQuery);
+      const isBored = /bored|what\s*should\s*i\s*do|something\s*fun|entertain\s*me/i.test(userQuery);
+
+      if (isHowAreYou) {
+        answer = "My day has been wonderful, thank you for asking! 😊 I've been busy helping students discover upcoming campus hackathons and fests. How has your day been going? Are you looking for any particular events or just exploring campus activities?";
+        suggestedQueries = ['My day is going great!', 'What events are happening this week?', 'Show Technical workshops'];
+      } else if (isWhatsUp) {
+        answer = "Not much, just staying on top of all the latest campus event schedules and chatting with students! How about you? Anything exciting on your schedule today?";
+        suggestedQueries = ['Tell me about AI Hackathon', 'Show upcoming fests', 'How do I register for an event?'];
+      } else if (isWhoAreYou) {
+        answer = "I'm your Arena AI Concierge! 🤖 Think of me as your campus companion. I can chat with you, help you discover hackathons and cultural fests, answer questions about venues and schedules, or guide you through registrations and digital certificates.";
+        suggestedQueries = ['What events can I register for?', 'Show free events', 'How do digital certificates work?'];
+      } else if (isGratitude) {
+        answer = "You're very welcome! 😊 Always happy to help. Let me know if you need anything else or want recommendations for upcoming events!";
+        suggestedQueries = ['Show recommended events', 'What events are happening this week?', 'Show Technical workshops'];
+      } else if (isJoke) {
+        answer = "Why do programmers prefer dark mode? Because light attracts bugs! 😄 Speaking of coding, we also have the 24-hour **AI Hackathon 2026** coming up if you feel like building something cool!";
+        suggestedQueries = ['Tell me about the AI Hackathon', 'Show other workshops', 'Tell me another joke'];
+        referencedEventIds = ['sample-ai-hackathon'];
+      } else if (isBored) {
+        answer = "If you're looking for something fun or engaging to do, there's plenty happening around campus! You can test your creativity at the **AI Hackathon 2026**, enjoy live performances at **Rangmanch Cultural Fest**, learn hands-on Figma at the **UI/UX Design Masterclass**, or join the **Inter-College Cricket Cup**. What type of activity sounds fun to you?";
+        suggestedQueries = ['Tell me about Rangmanch', 'Tell me about UI/UX Workshop', 'Show Cricket Cup'];
+        referencedEventIds = ['sample-ai-hackathon', 'sample-rangmanch', 'sample-ui-ux-design', 'sample-cricket-cup'];
+      } else if (isGreeting) {
+        answer = "Hello there! 👋 Great to chat with you today. How are you doing? Feel free to ask me anything about upcoming events, hackathons, registrations, or just chat!";
+        suggestedQueries = ['How was your day?', 'What events are happening this week?', 'Show Technical workshops'];
       } else if (userQuery.includes('hackathon') || userQuery.includes('genesis') || userQuery.includes('technical') || userQuery.includes('ai event')) {
         answer = 'The flagship **AI Hackathon 2026** is scheduled for Sep 15–16 in the Main Auditorium & Innovation Lab! It is a 24-hour sprint focusing on generative AI, intelligent agents, and neural interfaces. Registration is free and open to all students directly on your dashboard.';
         suggestedQueries = ['How do I register for AI Hackathon?', 'What is the hackathon schedule?', 'Are certificates provided?'];
@@ -79,6 +104,13 @@ class MockProvider extends BaseProvider {
         answer = 'Here are the active approved events upcoming on the Arena board:\n\n• **AI Hackathon 2026** (Technical) — Sep 15–16 | Main Auditorium (Free)\n• **Cultural Fest: Rangmanch** (Cultural) — Sep 20–21 | Open Air Theatre (Free)\n• **UI/UX Design Masterclass** (Workshop) — Sep 25 | Design Studio Lab 3 (₹50)\n• **Inter-College Cricket Cup** (Sports) — Oct 2–5 | Sports Ground (Free)\n\nClick any event card to register!';
         suggestedQueries = ['How do I register for AI Hackathon?', 'Show Technical workshops', 'Are there any fees?'];
         referencedEventIds = ['sample-ai-hackathon', 'sample-rangmanch', 'sample-ui-ux-design', 'sample-cricket-cup'];
+      } else {
+        answer = `I hear you! As your campus AI companion, I'm here to chat, answer questions, and help you find great hackathons, workshops, and fests around campus. Feel free to tell me what you're interested in or ask about what's going on this week!`;
+        suggestedQueries = [
+          'What events are happening this week?',
+          'Tell me about the AI Hackathon',
+          'Show Technical workshops',
+        ];
       }
 
       mockResult = {

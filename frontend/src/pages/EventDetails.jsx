@@ -36,7 +36,7 @@ const fallbackEvents = {
     fee: 0,
     status: 'approved',
     tags: ['AI', 'Hackathon', 'LLM', 'Autonomous Agents'],
-    createdBy: { name: 'Dr. Alan Turing', department: 'AI & Data Science' },
+    createdBy: { name: 'Faculty Coordinator', department: 'AI & Data Science' },
   },
   'sample-rangmanch': {
     _id: 'sample-rangmanch',
