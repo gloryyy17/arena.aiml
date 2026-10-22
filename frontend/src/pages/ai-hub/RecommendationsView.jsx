@@ -13,7 +13,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
-const navItems = [
+const facultyNavItems = [
   { label: '← AI Hub', to: '/ai-hub' },
   { label: 'Recommendations', to: '/ai-hub/recommendations' },
   { label: 'Event Copy', to: '/ai-hub/description' },
@@ -22,8 +22,15 @@ const navItems = [
   { label: 'Poster Studio', to: '/ai-hub/poster' },
 ];
 
+const studentNavItems = [
+  { label: 'Browse Events', to: '/dashboard' },
+  { label: '🎯 AI Recommendations', to: '/ai-hub/recommendations' },
+  { label: '🎟️ My Registrations', to: '/dashboard/registrations' },
+];
+
 const RecommendationsView = () => {
   const { user } = useAuth();
+  const navItems = user?.role === 'student' ? studentNavItems : facultyNavItems;
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [registeringId, setRegisteringId] = useState(null);

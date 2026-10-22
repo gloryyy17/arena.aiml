@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import html2canvas from 'html2canvas';
 import {
   Palette,
   Sparkles,
@@ -90,6 +92,8 @@ const categoryThemes = {
 };
 
 const PosterGenerator = () => {
+  const { user } = useAuth();
+
   // The 12 user input fields
   const [form, setForm] = useState({
     collegeLogo: 'S.B. Jain Institute • AURON AI',
@@ -99,8 +103,8 @@ const PosterGenerator = () => {
     date: 'September 28, 2026',
     time: '05:00 PM onwards',
     venue: 'Campus Grand Auditorium',
-    organizer: 'Department of AI & Data Science • Cultural Committee',
-    chiefGuest: 'Dr. Alan Turing — Renowned Choreographer & Performing Arts Director',
+    organizer: user?.department ? `Department of ${user.department}` : 'Department of AI & Data Science',
+    chiefGuest: user?.name ? `${user.name} — Event Lead` : 'Distinguished Keynote Speaker',
     registrationLink: 'https://arena.aiml/events/dance-smash',
     paymentQr: 'Scan to Pay & Register',
     additionalDetails: 'Cash Prizes ₹25,000 • Trophies & Merit Certificates • Free Campus Refreshments',
@@ -188,49 +192,78 @@ const PosterGenerator = () => {
     }, 600);
   };
 
-  // Download high-resolution PNG using HTML5 Canvas
-  const handleDownload = () => {
+  // Download high-resolution PNG using html2canvas
+  const handleDownload = async () => {
     const node = posterRef.current;
     if (!node) return;
 
-    const width = 640;
-    const height = 905;
-
-    const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">
-            ${node.outerHTML}
-          </div>
-        </foreignObject>
-      </svg>
-    `;
-
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const URL = window.URL || window.webkitURL || window;
-    const blobURL = URL.createObjectURL(svgBlob);
-
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(2, 2);
-      ctx.drawImage(image, 0, 0);
+    setStatusMsg('Generating high-resolution poster download...');
+    try {
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0F0F12',
+        logging: false,
+      });
 
       const pngURL = canvas.toDataURL('image/png');
       const dlLink = document.createElement('a');
-      dlLink.download = `${form.eventName.replace(/\s+/g, '_')}_Poster.png`;
+      dlLink.download = `${(form.eventName || 'Event').replace(/\s+/g, '_')}_Poster.png`;
       dlLink.href = pngURL;
+      document.body.appendChild(dlLink);
       dlLink.click();
-      URL.revokeObjectURL(blobURL);
-    };
-    image.src = blobURL;
+      document.body.removeChild(dlLink);
+
+      setStatusMsg('Poster downloaded successfully! 🎉');
+      setTimeout(() => setStatusMsg(''), 3000);
+    } catch (err) {
+      console.error('Poster download error:', err);
+      setStatusMsg('Download error. Please use the Print button to save as PDF.');
+      setTimeout(() => setStatusMsg(''), 4000);
+    }
   };
 
   const handlePrint = () => {
-    window.print();
+    const node = posterRef.current;
+    if (!node) return;
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1200');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((s) => s.outerHTML)
+      .join('\n');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${form.eventName || 'Event'} - Poster</title>
+          ${styles}
+          <style>
+            @page { size: portrait; margin: 0; }
+            body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; background: #0F0F12; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          </style>
+        </head>
+        <body>
+          ${node.outerHTML}
+          <script>
+            window.onload = () => {
+              setTimeout(() => {
+                window.focus();
+                window.print();
+                window.close();
+              }, 400);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const handleShare = () => {
@@ -451,7 +484,7 @@ const PosterGenerator = () => {
                 value={form.chiefGuest}
                 onChange={handleInputChange}
                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-border-light dark:border-border-dark bg-white dark:bg-[#242429] outline-none focus:border-accent transition-colors"
-                placeholder="e.g. Dr. Alan Turing — Chief AI Scientist"
+                placeholder="e.g. Prof. Sarah Connor — Chief AI Scientist"
               />
             </div>
 

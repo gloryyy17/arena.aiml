@@ -24,10 +24,10 @@ const seedDemoCertificates = () => {
       eventName: 'AI Genesis Hackathon 2026',
       certificateType: 'Participation',
       citation: 'WE GIVE THIS CERTIFICATE BECAUSE AARAV SHARMA HAS PARTICIPATED IN AI GENESIS HACKATHON 2026 THAT WE ORGANIZE.',
-      organizerName: 'Dr. Alan Turing',
+      organizerName: 'Faculty Coordinator',
       hodName: 'Dr. Animesh Tayal',
       issuedAt: new Date().toISOString(),
-      issuedBy: { name: 'Dr. Alan Turing', role: 'faculty' },
+      issuedBy: { name: 'Faculty Coordinator', role: 'faculty' },
     };
     mockCertificates.set(demoCert.verificationId, demoCert);
   }

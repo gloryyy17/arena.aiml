@@ -5,7 +5,6 @@ import {
   Palette,
   FileText,
   Mail,
-  MessageSquare,
   BarChart3,
   Compass,
   Cpu,
@@ -15,8 +14,20 @@ import {
   Zap,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { useAuth } from '../../context/AuthContext';
 
 const modules = [
+  {
+    id: 'recommendations',
+    title: 'Smart Recommendations',
+    description: 'Multi-signal content-based discovery engine delivering personalized events with explainable affinity scores.',
+    icon: Compass,
+    to: '/ai-hub/recommendations',
+    badge: 'Intelligence',
+    badgeColor: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
+    color: 'from-cyan-500/20 to-sky-500/5',
+    allowedRoles: ['student', 'faculty'],
+  },
   {
     id: 'certificate',
     title: 'AI Certificate Generator',
@@ -26,6 +37,7 @@ const modules = [
     badge: 'Credentials',
     badgeColor: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
     color: 'from-indigo-500/20 to-blue-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
   {
     id: 'poster',
@@ -36,6 +48,7 @@ const modules = [
     badge: 'Creativity',
     badgeColor: 'bg-pink-500/10 text-pink-500 border-pink-500/20',
     color: 'from-pink-500/20 to-rose-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
   {
     id: 'description',
@@ -46,6 +59,7 @@ const modules = [
     badge: 'Marketing',
     badgeColor: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
     color: 'from-amber-500/20 to-orange-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
   {
     id: 'email',
@@ -56,16 +70,7 @@ const modules = [
     badge: 'Communication',
     badgeColor: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     color: 'from-blue-500/20 to-indigo-500/5',
-  },
-  {
-    id: 'chat',
-    title: 'Arena AI Concierge',
-    description: 'Interactive intelligent assistant grounded in authoritative database event schedules, venues, and registrations.',
-    icon: MessageSquare,
-    to: '/ai-hub/chat',
-    badge: 'Assistant',
-    badgeColor: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-    color: 'from-purple-500/20 to-violet-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
   {
     id: 'feedback',
@@ -76,16 +81,7 @@ const modules = [
     badge: 'Analytics',
     badgeColor: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
     color: 'from-emerald-500/20 to-teal-500/5',
-  },
-  {
-    id: 'recommendations',
-    title: 'Smart Recommendations',
-    description: 'Multi-signal content-based discovery engine delivering personalized events with explainable affinity scores.',
-    icon: Compass,
-    to: '/ai-hub/recommendations',
-    badge: 'Intelligence',
-    badgeColor: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
-    color: 'from-cyan-500/20 to-sky-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
   {
     id: 'prompts',
@@ -96,22 +92,37 @@ const modules = [
     badge: 'System',
     badgeColor: 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20',
     color: 'from-neutral-500/20 to-stone-500/5',
+    allowedRoles: ['faculty', 'admin'],
   },
 ];
 
 const AIHub = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const navItems = [
-    { label: 'Overview', to: '/dashboard' },
-    { label: 'AI Hub', to: '/ai-hub' },
-    { label: 'Poster Studio', to: '/ai-hub/poster' },
-    { label: 'Event Copy', to: '/ai-hub/description' },
-    { label: 'Email Studio', to: '/ai-hub/email' },
-    { label: 'Feedback Analysis', to: '/ai-hub/feedback' },
-    { label: 'Recommendations', to: '/ai-hub/recommendations' },
-    { label: 'Prompt Registry', to: '/ai-hub/prompts' },
-  ];
+  const isStudent = user?.role === 'student';
+  const visibleModules = modules.filter(
+    (mod) => !mod.allowedRoles || mod.allowedRoles.includes(user?.role)
+  );
+
+  const isAdmin = user?.role === 'admin';
+  const navItems = isStudent
+    ? [
+        { label: 'Browse Events', to: '/dashboard' },
+        { label: '🎯 AI Recommendations', to: '/ai-hub/recommendations' },
+        { label: '🎟️ My Registrations', to: '/dashboard/registrations' },
+      ]
+    : [
+        { label: 'Overview', to: '/dashboard' },
+        { label: 'AI Hub', to: '/ai-hub' },
+        { label: 'Poster Studio', to: '/ai-hub/poster' },
+        { label: 'Certificate Studio', to: '/ai-hub/certificate' },
+        { label: 'Event Copy', to: '/ai-hub/description' },
+        { label: 'Email Studio', to: '/ai-hub/email' },
+        { label: 'Feedback Analysis', to: '/ai-hub/feedback' },
+        ...(!isAdmin ? [{ label: 'Recommendations', to: '/ai-hub/recommendations' }] : []),
+        { label: 'Prompt Registry', to: '/ai-hub/prompts' },
+      ];
 
   return (
     <DashboardLayout navItems={navItems}>
@@ -137,7 +148,7 @@ const AIHub = () => {
 
       {/* Grid of Modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modules.map((mod, index) => {
+        {visibleModules.map((mod, index) => {
           const Icon = mod.icon;
           return (
             <motion.div

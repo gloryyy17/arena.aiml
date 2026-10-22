@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
-const navItems = [
+const baseNavItems = [
   { label: '← AI Hub', to: '/ai-hub' },
   { label: 'Feedback Analysis', to: '/ai-hub/feedback' },
   { label: 'Event Copy', to: '/ai-hub/description' },
@@ -26,6 +27,10 @@ const navItems = [
 ];
 
 const FeedbackAnalysis = () => {
+  const { user } = useAuth();
+  const navItems = user?.role === 'admin'
+    ? baseNavItems.filter((i) => i.to !== '/ai-hub/recommendations')
+    : baseNavItems;
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState('');
   const [feedbacks, setFeedbacks] = useState([]);

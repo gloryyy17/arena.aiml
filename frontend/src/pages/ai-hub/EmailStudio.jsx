@@ -18,7 +18,9 @@ import {
 import DashboardLayout from '../../components/DashboardLayout';
 import api from '../../api/axios';
 
-const navItems = [
+import { useAuth } from '../../context/AuthContext';
+
+const baseNavItems = [
   { label: '← AI Hub', to: '/ai-hub' },
   { label: 'Poster Studio', to: '/ai-hub/poster' },
   { label: 'Event Copy', to: '/ai-hub/description' },
@@ -39,6 +41,10 @@ const emailTypes = [
 ];
 
 const EmailStudio = () => {
+  const { user } = useAuth();
+  const navItems = user?.role === 'admin'
+    ? baseNavItems.filter((i) => i.to !== '/ai-hub/recommendations')
+    : baseNavItems;
   const [form, setForm] = useState({
     emailType: 'invitation',
     eventTitle: 'AI Genesis Hackathon 2026',

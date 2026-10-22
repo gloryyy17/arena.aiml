@@ -61,7 +61,7 @@ function App() {
         <Route
           path="/dashboard/certificates"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <CertificateGenerator />
             </ProtectedRoute>
           }
@@ -87,7 +87,7 @@ function App() {
         <Route
           path="/ai-hub/certificate"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <CertificateGenerator />
             </ProtectedRoute>
           }
@@ -95,7 +95,7 @@ function App() {
         <Route
           path="/ai-hub/poster"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <PosterGenerator />
             </ProtectedRoute>
           }
@@ -103,7 +103,7 @@ function App() {
         <Route
           path="/ai-hub/description"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <EventDescriptionGenerator />
             </ProtectedRoute>
           }
@@ -111,7 +111,7 @@ function App() {
         <Route
           path="/ai-hub/email"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <EmailStudio />
             </ProtectedRoute>
           }
@@ -127,7 +127,7 @@ function App() {
         <Route
           path="/ai-hub/feedback"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <FeedbackAnalysis />
             </ProtectedRoute>
           }
@@ -135,7 +135,7 @@ function App() {
         <Route
           path="/ai-hub/recommendations"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['student', 'faculty']}>
               <RecommendationsView />
             </ProtectedRoute>
           }
@@ -143,7 +143,7 @@ function App() {
         <Route
           path="/ai-hub/prompts"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['faculty', 'admin']}>
               <PromptSystemView />
             </ProtectedRoute>
           }

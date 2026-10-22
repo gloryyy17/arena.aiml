@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import {
   Award,
   Sparkles,
@@ -173,48 +174,75 @@ const CertificateGenerator = () => {
 
   // Print Certificate (opens native print window styled for certificate)
   const handlePrint = () => {
-    window.print();
-  };
-
-  // Download high-resolution PNG using HTML5 Canvas
-  const handleDownloadImage = () => {
     const certElement = certificateRef.current;
     if (!certElement) return;
 
-    const width = 1120;
-    const height = 792;
+    const printWindow = window.open('', '_blank', 'width=1200,height=850');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
 
-    const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">
-            ${certElement.outerHTML}
-          </div>
-        </foreignObject>
-      </svg>
-    `;
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((s) => s.outerHTML)
+      .join('\n');
 
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const URL = window.URL || window.webkitURL || window;
-    const blobURL = URL.createObjectURL(svgBlob);
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Certificate - ${form.participantName || 'Participant'}</title>
+          ${styles}
+          <style>
+            @page { size: landscape; margin: 0; }
+            body { margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          </style>
+        </head>
+        <body>
+          ${certElement.outerHTML}
+          <script>
+            window.onload = () => {
+              setTimeout(() => {
+                window.focus();
+                window.print();
+                window.close();
+              }, 400);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width * 2;
-      canvas.height = height * 2;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(2, 2);
-      ctx.drawImage(image, 0, 0);
+  // Download high-resolution PNG using html2canvas
+  const handleDownloadImage = async () => {
+    const certElement = certificateRef.current;
+    if (!certElement) return;
+
+    try {
+      const canvas = await html2canvas(certElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#FFFFFF',
+        logging: false,
+      });
 
       const pngURL = canvas.toDataURL('image/png');
       const dlLink = document.createElement('a');
-      dlLink.download = `Certificate_${form.participantName.replace(/\s+/g, '_')}_${form.eventName.replace(/\s+/g, '_')}.png`;
+      const participantSlug = (form.participantName || 'Student').replace(/\s+/g, '_');
+      const eventSlug = (form.eventName || 'Event').replace(/\s+/g, '_');
+      dlLink.download = `Certificate_${participantSlug}_${eventSlug}.png`;
       dlLink.href = pngURL;
+      document.body.appendChild(dlLink);
       dlLink.click();
-      URL.revokeObjectURL(blobURL);
-    };
-    image.src = blobURL;
+      document.body.removeChild(dlLink);
+    } catch (err) {
+      console.error('Certificate download error:', err);
+      // Fallback: trigger print dialog to save as PDF
+      handlePrint();
+    }
   };
 
   const handleCopyLink = () => {

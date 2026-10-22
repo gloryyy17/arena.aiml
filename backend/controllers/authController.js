@@ -14,6 +14,13 @@ const registerUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
     }
 
+    if (role === 'admin' && !email.toLowerCase().includes('@admin')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin accounts require an authorized administrator email containing @admin (e.g. admin@admin.arena.aiml)',
+      });
+    }
+
     // In-Memory Fallback if MongoDB is not connected
     if (!isDbConnected()) {
       const userExists = mockStore.findUserByEmail(email);
