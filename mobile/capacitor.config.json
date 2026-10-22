@@ -1,0 +1,15 @@
+{
+  "appId": "com.arena.aiml.student",
+  "appName": "Arena Student",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0F0F12"
+    }
+  }
+}
